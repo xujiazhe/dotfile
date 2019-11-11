@@ -1,0 +1,638 @@
+[
+  {
+    "Constant" : [
+
+    ],
+    "submodules" : [
+
+    ],
+    "Function" : [
+
+    ],
+    "Variable" : [
+      {
+        "desc" : "Logger object used within the Spoon. Can be accessed to set the default log level for the messages coming from the Spoon.",
+        "stripped_doc" : [
+          "Logger object used within the Spoon. Can be accessed to set the default log level for the messages coming from the Spoon."
+        ],
+        "def" : "FadeLogo.logger",
+        "doc" : "Logger object used within the Spoon. Can be accessed to set the default log level for the messages coming from the Spoon.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.logger",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "logger",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Image to display. Must be an `hs.image` object. Defaults to `hs.image.imageFromName(hs.image.systemImageNames.ApplicationIcon)` (the Hammerspoon app icon)",
+        "stripped_doc" : [
+          "Image to display. Must be an `hs.image` object. Defaults to `hs.image.imageFromName(hs.image.systemImageNames.ApplicationIcon)` (the Hammerspoon app icon)"
+        ],
+        "def" : "FadeLogo.image",
+        "doc" : "Image to display. Must be an `hs.image` object. Defaults to `hs.image.imageFromName(hs.image.systemImageNames.ApplicationIcon)` (the Hammerspoon app icon)",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.image",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "image",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "`hs.geometry` object specifying the initial size of the image to display in the center of the screen. The image object will be resizes proportionally to fit in this size. Defaults to `hs.geometry.size(w=200, h=200)`",
+        "stripped_doc" : [
+          "`hs.geometry` object specifying the initial size of the image to display in the center of the screen. The image object will be resizes proportionally to fit in this size. Defaults to `hs.geometry.size(w=200, h=200)`"
+        ],
+        "def" : "FadeLogo.image_size",
+        "doc" : "`hs.geometry` object specifying the initial size of the image to display in the center of the screen. The image object will be resizes proportionally to fit in this size. Defaults to `hs.geometry.size(w=200, h=200)`",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.image_size",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "image_size",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Initial transparency of the image. Defaults to 1.0.",
+        "stripped_doc" : [
+          "Initial transparency of the image. Defaults to 1.0."
+        ],
+        "def" : "FadeLogo.image_alpha",
+        "doc" : "Initial transparency of the image. Defaults to 1.0.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.image_alpha",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "image_alpha",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Do zoom-and-fade if `true`, otherwise do a regular fade",
+        "stripped_doc" : [
+          "Do zoom-and-fade if `true`, otherwise do a regular fade"
+        ],
+        "def" : "FadeLogo.zoom",
+        "doc" : "Do zoom-and-fade if `true`, otherwise do a regular fade",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.zoom",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "zoom",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Number of seconds over which to fade in the image. Defaults to 0.3.",
+        "stripped_doc" : [
+          "Number of seconds over which to fade in the image. Defaults to 0.3."
+        ],
+        "def" : "FadeLogo.fade_in_time",
+        "doc" : "Number of seconds over which to fade in the image. Defaults to 0.3.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.fade_in_time",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "fade_in_time",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Number of seconds over which to fade out the image. Defaults to 0.5.",
+        "stripped_doc" : [
+          "Number of seconds over which to fade out the image. Defaults to 0.5."
+        ],
+        "def" : "FadeLogo.fade_out_time",
+        "doc" : "Number of seconds over which to fade out the image. Defaults to 0.5.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.fade_out_time",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "fade_out_time",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Number of seconds to leave the image on the screen when `start()` is called.",
+        "stripped_doc" : [
+          "Number of seconds to leave the image on the screen when `start()` is called."
+        ],
+        "def" : "FadeLogo.run_time",
+        "doc" : "Number of seconds to leave the image on the screen when `start()` is called.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.run_time",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "run_time",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Factor by which to scale the image at every iteration during the zoom-and-fade. Defaults to 1.1.",
+        "stripped_doc" : [
+          "Factor by which to scale the image at every iteration during the zoom-and-fade. Defaults to 1.1."
+        ],
+        "def" : "FadeLogo.zoom_scale_factor",
+        "doc" : "Factor by which to scale the image at every iteration during the zoom-and-fade. Defaults to 1.1.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.zoom_scale_factor",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "zoom_scale_factor",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Seconds between the zooming iterations",
+        "stripped_doc" : [
+          "Seconds between the zooming iterations"
+        ],
+        "def" : "FadeLogo.zoom_scale_timer",
+        "doc" : "Seconds between the zooming iterations",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.zoom_scale_timer",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "zoom_scale_timer",
+        "parameters" : [
+
+        ]
+      }
+    ],
+    "stripped_doc" : [
+
+    ],
+    "desc" : "Show a fading-and-zooming image in the center of the screen",
+    "Deprecated" : [
+
+    ],
+    "type" : "Module",
+    "Constructor" : [
+
+    ],
+    "Field" : [
+
+    ],
+    "Method" : [
+      {
+        "desc" : "Hide and delete the canvas",
+        "stripped_doc" : [
+          "Hide and delete the canvas"
+        ],
+        "def" : "FadeLogo:delete()",
+        "doc" : "Hide and delete the canvas",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo:delete()",
+        "type" : "Method",
+        "returns" : [
+
+        ],
+        "name" : "delete",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Display the image, fading it in over `fade_in_time` seconds",
+        "stripped_doc" : [
+          "Display the image, fading it in over `fade_in_time` seconds"
+        ],
+        "def" : "FadeLogo:show()",
+        "doc" : "Display the image, fading it in over `fade_in_time` seconds",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo:show()",
+        "type" : "Method",
+        "returns" : [
+
+        ],
+        "name" : "show",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Hide the image without zoom, fading it out over `fade_out_time` seconds",
+        "stripped_doc" : [
+          "Hide the image without zoom, fading it out over `fade_out_time` seconds"
+        ],
+        "def" : "FadeLogo:hide()",
+        "doc" : "Hide the image without zoom, fading it out over `fade_out_time` seconds",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo:hide()",
+        "type" : "Method",
+        "returns" : [
+
+        ],
+        "name" : "hide",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Zoom-and-fade the image over `fade_out_time` seconds",
+        "stripped_doc" : [
+          "Zoom-and-fade the image over `fade_out_time` seconds"
+        ],
+        "def" : "FadeLogo:zoom_and_fade()",
+        "doc" : "Zoom-and-fade the image over `fade_out_time` seconds",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo:zoom_and_fade()",
+        "type" : "Method",
+        "returns" : [
+
+        ],
+        "name" : "zoom_and_fade",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Show the image, wait `run_time` seconds, and then zoom-and-fade it out.",
+        "stripped_doc" : [
+          "Show the image, wait `run_time` seconds, and then zoom-and-fade it out."
+        ],
+        "def" : "FadeLogo:start()",
+        "doc" : "Show the image, wait `run_time` seconds, and then zoom-and-fade it out.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo:start()",
+        "type" : "Method",
+        "returns" : [
+
+        ],
+        "name" : "start",
+        "parameters" : [
+
+        ]
+      }
+    ],
+    "Command" : [
+
+    ],
+    "items" : [
+      {
+        "desc" : "Number of seconds over which to fade in the image. Defaults to 0.3.",
+        "stripped_doc" : [
+          "Number of seconds over which to fade in the image. Defaults to 0.3."
+        ],
+        "def" : "FadeLogo.fade_in_time",
+        "doc" : "Number of seconds over which to fade in the image. Defaults to 0.3.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.fade_in_time",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "fade_in_time",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Number of seconds over which to fade out the image. Defaults to 0.5.",
+        "stripped_doc" : [
+          "Number of seconds over which to fade out the image. Defaults to 0.5."
+        ],
+        "def" : "FadeLogo.fade_out_time",
+        "doc" : "Number of seconds over which to fade out the image. Defaults to 0.5.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.fade_out_time",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "fade_out_time",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Image to display. Must be an `hs.image` object. Defaults to `hs.image.imageFromName(hs.image.systemImageNames.ApplicationIcon)` (the Hammerspoon app icon)",
+        "stripped_doc" : [
+          "Image to display. Must be an `hs.image` object. Defaults to `hs.image.imageFromName(hs.image.systemImageNames.ApplicationIcon)` (the Hammerspoon app icon)"
+        ],
+        "def" : "FadeLogo.image",
+        "doc" : "Image to display. Must be an `hs.image` object. Defaults to `hs.image.imageFromName(hs.image.systemImageNames.ApplicationIcon)` (the Hammerspoon app icon)",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.image",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "image",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Initial transparency of the image. Defaults to 1.0.",
+        "stripped_doc" : [
+          "Initial transparency of the image. Defaults to 1.0."
+        ],
+        "def" : "FadeLogo.image_alpha",
+        "doc" : "Initial transparency of the image. Defaults to 1.0.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.image_alpha",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "image_alpha",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "`hs.geometry` object specifying the initial size of the image to display in the center of the screen. The image object will be resizes proportionally to fit in this size. Defaults to `hs.geometry.size(w=200, h=200)`",
+        "stripped_doc" : [
+          "`hs.geometry` object specifying the initial size of the image to display in the center of the screen. The image object will be resizes proportionally to fit in this size. Defaults to `hs.geometry.size(w=200, h=200)`"
+        ],
+        "def" : "FadeLogo.image_size",
+        "doc" : "`hs.geometry` object specifying the initial size of the image to display in the center of the screen. The image object will be resizes proportionally to fit in this size. Defaults to `hs.geometry.size(w=200, h=200)`",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.image_size",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "image_size",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Logger object used within the Spoon. Can be accessed to set the default log level for the messages coming from the Spoon.",
+        "stripped_doc" : [
+          "Logger object used within the Spoon. Can be accessed to set the default log level for the messages coming from the Spoon."
+        ],
+        "def" : "FadeLogo.logger",
+        "doc" : "Logger object used within the Spoon. Can be accessed to set the default log level for the messages coming from the Spoon.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.logger",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "logger",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Number of seconds to leave the image on the screen when `start()` is called.",
+        "stripped_doc" : [
+          "Number of seconds to leave the image on the screen when `start()` is called."
+        ],
+        "def" : "FadeLogo.run_time",
+        "doc" : "Number of seconds to leave the image on the screen when `start()` is called.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.run_time",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "run_time",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Do zoom-and-fade if `true`, otherwise do a regular fade",
+        "stripped_doc" : [
+          "Do zoom-and-fade if `true`, otherwise do a regular fade"
+        ],
+        "def" : "FadeLogo.zoom",
+        "doc" : "Do zoom-and-fade if `true`, otherwise do a regular fade",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.zoom",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "zoom",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Factor by which to scale the image at every iteration during the zoom-and-fade. Defaults to 1.1.",
+        "stripped_doc" : [
+          "Factor by which to scale the image at every iteration during the zoom-and-fade. Defaults to 1.1."
+        ],
+        "def" : "FadeLogo.zoom_scale_factor",
+        "doc" : "Factor by which to scale the image at every iteration during the zoom-and-fade. Defaults to 1.1.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.zoom_scale_factor",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "zoom_scale_factor",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Seconds between the zooming iterations",
+        "stripped_doc" : [
+          "Seconds between the zooming iterations"
+        ],
+        "def" : "FadeLogo.zoom_scale_timer",
+        "doc" : "Seconds between the zooming iterations",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo.zoom_scale_timer",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "name" : "zoom_scale_timer",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Hide and delete the canvas",
+        "stripped_doc" : [
+          "Hide and delete the canvas"
+        ],
+        "def" : "FadeLogo:delete()",
+        "doc" : "Hide and delete the canvas",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo:delete()",
+        "type" : "Method",
+        "returns" : [
+
+        ],
+        "name" : "delete",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Hide the image without zoom, fading it out over `fade_out_time` seconds",
+        "stripped_doc" : [
+          "Hide the image without zoom, fading it out over `fade_out_time` seconds"
+        ],
+        "def" : "FadeLogo:hide()",
+        "doc" : "Hide the image without zoom, fading it out over `fade_out_time` seconds",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo:hide()",
+        "type" : "Method",
+        "returns" : [
+
+        ],
+        "name" : "hide",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Display the image, fading it in over `fade_in_time` seconds",
+        "stripped_doc" : [
+          "Display the image, fading it in over `fade_in_time` seconds"
+        ],
+        "def" : "FadeLogo:show()",
+        "doc" : "Display the image, fading it in over `fade_in_time` seconds",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo:show()",
+        "type" : "Method",
+        "returns" : [
+
+        ],
+        "name" : "show",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Show the image, wait `run_time` seconds, and then zoom-and-fade it out.",
+        "stripped_doc" : [
+          "Show the image, wait `run_time` seconds, and then zoom-and-fade it out."
+        ],
+        "def" : "FadeLogo:start()",
+        "doc" : "Show the image, wait `run_time` seconds, and then zoom-and-fade it out.",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo:start()",
+        "type" : "Method",
+        "returns" : [
+
+        ],
+        "name" : "start",
+        "parameters" : [
+
+        ]
+      },
+      {
+        "desc" : "Zoom-and-fade the image over `fade_out_time` seconds",
+        "stripped_doc" : [
+          "Zoom-and-fade the image over `fade_out_time` seconds"
+        ],
+        "def" : "FadeLogo:zoom_and_fade()",
+        "doc" : "Zoom-and-fade the image over `fade_out_time` seconds",
+        "notes" : [
+
+        ],
+        "signature" : "FadeLogo:zoom_and_fade()",
+        "type" : "Method",
+        "returns" : [
+
+        ],
+        "name" : "zoom_and_fade",
+        "parameters" : [
+
+        ]
+      }
+    ],
+    "doc" : "Show a fading-and-zooming image in the center of the screen\n\nBy default the Hammerspoon logo is shown. Typical use is to show it as an indicator when your configuration finishes loading, by adding the following to the bottom of your `~\/.hammerspoon\/init.lua` file:\n```\n  hs.loadSpoon('FadeLogo'):start()\n```\nWhich looks like this: http:\/\/imgur.com\/a\/TbZOl\n\nDownload: [https:\/\/github.com\/Hammerspoon\/Spoons\/raw\/master\/Spoons\/FadeLogo.spoon.zip](https:\/\/github.com\/Hammerspoon\/Spoons\/raw\/master\/Spoons\/FadeLogo.spoon.zip)",
+    "name" : "FadeLogo"
+  }
+]

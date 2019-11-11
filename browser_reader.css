@@ -1,0 +1,14 @@
+body{    background-color: #FAF9DE !important;}
+
+::selection {
+    color: blue;
+    background-color: #FAF9DE;
+    /*background-color:#fff7f7;*/
+    outline: darkblue;
+    outline-style: dashed;
+    outline-width: 2px;
+}
+
+p > ::selection  {
+    color: darkblue;
+}

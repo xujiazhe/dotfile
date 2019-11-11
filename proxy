@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+
+set -e
+PROXY_INTERFACE="Wi-Fi"
+#PROXY_INTERFACE="iPhone USB"
+PROXY_HOST=127.0.0.1
+PROXY_PORT=1080
+
+# A host where ssh can login without interaction, with a key-based
+# authentication.
+SOCKS_PROC_USER="root"
+SOCKS_PROC_HOST="45.76.186.83"
+SOCKS_PROC_PORT=22
+SOCKS_PROC_IDENTITY=".ssh/id_rsa.s"
+
+SOCKS_PROC_LOG=/tmp/ssh-socks-proxy-log.txt
+SOCKS_PROC_PIDFILE=/tmp/ssh-socks-proxy-pid.txt
+
+DIR="$(cd "$(dirname "$0")" && pwd)"
+PROXY_PAC_FILE="$DIR/gfwlist.pac"
+PROXY_PAC_FILE="https://raw.githubusercontent.com/petronny/gfwlist2pac/master/gfwlist.pac"
+
+#ssh -o PubkeyAuthentication=yes -o StrictHostKeyChecking=false -o PasswordAuthentication=no \
+#    -o TCPKeepAlive=yes  -o ServerAliveInterval=60 -o ServerAliveCountMax=3 \
+#    -i .ssh/id_rsa.s  -gfND 1080 root@45.76.186.83
+
+#-o PubkeyAuthentication=yes -o StrictHostKeyChecking=false -o PasswordAuthentication=no  -o ServerAliveInterval=60 -o ServerAliveCountMax=3 \
+SOCKS_PROC_CMD="ssh \
+      -o PubkeyAuthentication=yes -o StrictHostKeyChecking=false -o PasswordAuthentication=no \
+      -o TCPKeepAlive=yes  -o ServerAliveInterval=60 -o ServerAliveCountMax=3 \
+      -i .ssh/id_rsa.s -gfND $PROXY_PORT $SOCKS_PROC_USER@$SOCKS_PROC_HOST -p $SOCKS_PROC_PORT"
+
+#SOCKS_PROC_CMD="ssh -i $SOCKS_PROC_IDENTITY  -D $PROXY_HOST:$PROXY_PORT $SOCKS_PROC_USER@$SOCKS_PROC_HOST -p $SOCKS_PROC_PORT"
+
+
+if [[ $1 == "on" ]]; then
+    nohup $SOCKS_PROC_CMD > "$SOCKS_PROC_LOG" 2>&1 # &
+    echo $(lsof -i:$PROXY_PORT | awk '/ssh / && /\ \(LISTEN\)/{print $2}' | uniq) > "$SOCKS_PROC_PIDFILE"
+#    networksetup -setsocksfirewallproxy "$PROXY_INTERFACE" $PROXY_HOST $PROXY_PORT
+#    networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" on
+#    networksetup -setproxybypassdomains "$PROXY_INTERFACE" localhost 127.0.0.1/8 ::1 *.lan 169.254/16 192.168.*.* *.baidu.com *.sogou.com *.youdao.com *.weibo.com *.weixin.com *.qq.com *.sohu.com *.163.com
+
+
+    networksetup -setautoproxystate "$PROXY_INTERFACE" off
+    networksetup -setautoproxyurl "$PROXY_INTERFACE" $PROXY_PAC_FILE
+    networksetup -getautoproxyurl "$PROXY_INTERFACE"
+    cat "$SOCKS_PROC_PIDFILE"
+    echo "SOCKS proxy enabled"
+
+elif [[ $1 == "off" ]]; then
+    kill -9 $(cat "$SOCKS_PROC_PIDFILE")
+    rm "$SOCKS_PROC_PIDFILE"
+    networksetup -setautoproxystate "$PROXY_INTERFACE" off
+#    networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" off
+    echo "SOCKS proxy disabled"
+
+elif [[ $1 == "status" ]]; then
+    echo "======================================================"
+    #networksetup -listallnetworkservices     -listallhardwareports  -getnetworkserviceenabled
+    echo "Current (SOCKS) Proxy Settings:"
+    echo "======================================================"
+    networksetup -getautoproxyurl "$PROXY_INTERFACE"
+#    networksetup -getsocksfirewallproxy "$PROXY_INTERFACE"
+    tail "$SOCKS_PROC_LOG"
+    ps -p $(cat "$SOCKS_PROC_PIDFILE")
+    echo
+
+else
+    echo "`basename $0` toggles SOCKS proxy settings on OS X"
+    echo
+    echo "Usage: "
+    echo "  $ proxy on           # turns SOCKS proxy on"
+    echo "  $ proxy off          # turns SOCKS proxy off"
+    echo "  $ proxy status       # prints status of proxy settings"
+    echo
+    echo "proxy interface:      " $PROXY_INTERFACE
+    echo "proxy host:           " $PROXY_HOST
+    echo "proxy port:           " $PROXY_PORT
+    echo
+    exit 65 # end process with error to indicate incorrect arguments
+fi
+
+
+#可以动态注入的
+#https://gist.github.com/dgoguerra/66d496345ee7e53169ad
+
+#proxy on mac
+setproxy(){
+  #https://gist.github.com/fearblackcat/850c6e027d5a03017c44daaa6a7ffc30
+  export http_proxy=$PROXY_PAC_FILE
+  export https_proxy=$PROXY_PAC_FILE
+  export ALL_PROXY=$PROXY_PAC_FILE
+
+#  export http_proxy=socks5://127.0.0.1:1080
+#  export https_proxy=socks5://127.0.0.1:1080
+#  export ALL_PROXY=socks5://127.0.0.1:1080
+  alias unsetproxy="unset ALL_PROXY; unset http_proxy; unset https_proxy;"
+  alias ip="curl http://wtfismyip.com/json"
+  #git config --global http.proxy 'socks5://192.168.1.2:1080'
+  #git config --global https.proxy 'socks5://192.168.1.2:1080'
+}
+
+alias unsetproxy="unset ALL_PROXY; unset http_proxy; unset https_proxy;"
+
+#如果不能用socks5
+#代理转换  https://blog.fazero.me/2015/08/31/%E5%88%A9%E7%94%A8proxychains%E5%9C%A8%E7%BB%88%E7%AB%AF%E4%BD%BF%E7%94%A8socks5%E4%BB%A3%E7%90%86/

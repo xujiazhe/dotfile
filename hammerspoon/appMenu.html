@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>菜单项</title>
+    <script src="js/vue.min.js"></script>
+    <script src="js/less.js"></script>
+    <script src="js/browser.js"></script>
+</head>
+<body>
+
+<style data-dump-line-numbers="all" type="text/less">
+    html{height: 100%;
+        width: 100%;
+        border: 2px #d1d1d1 solid;
+        background: #eee;
+    }
+    body, * {
+        margin: 0;
+        padding: 0;
+        box-sizing:border-box;
+
+        overflow: -moz-scrollbars-none;
+        -ms-overflow-style: none;
+    }
+    body::-webkit-scrollbar {width: 0 !important;}
+
+    #appMenu {
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Chrome/Safari/Opera */
+        -khtml-user-select: none; /* Konqueror */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none;
+        /* Non-prefixed version, currently not supported by any browser */
+    }
+
+    @selected-color: blue;
+    @background-color: #f7f7f7;
+    @font-color: #eee;
+    @font-size: 14px;// 13
+    @menu-border-color: black;
+
+    ul, ol, li {list-style: inside none;}
+    ul, li {margin: 0;}
+
+    ol#appMenu {
+        width: 100%;
+        padding: 0;
+        /*background-color: #f7f7f7;*/
+        font-size: @font-size !important;
+        line-height: 20px !important;
+        font: menu !important;
+
+        &:after {content: ' ';display: table;clear: both;}
+
+        li {
+            padding: 0 7px;
+            line-height: 20px !important;
+            div,span{line-height: 20px !important;font-size: @font-size;}
+
+            /*TODO safari有点问题 width:max-content;*/
+            li li .cmdtext{height: 20px;white-space: nowrap;overflow-x: hidden;
+                /*&::-webkit-scrollbar {width: 0 !important;}*/
+            }
+
+            .cmdModifiers{float: right;  margin-left: 12px;}
+            .arrow{float: right;}
+            .tapkey{
+                float: left;
+                font: menu;
+                text-decoration: underline;
+                margin-right: 8px;
+                font-weight: lighter;
+                &.topbar{margin-right: 4px;}
+                &.justFirst{
+                    float:none;
+                    margin-right: -3.4px;
+                    vertical-align: 0.4px;
+                    font-weight: bold;
+                    /*text-decoration:none !important;*/
+                }
+            }
+        }
+        > p{
+            margin-left: 7px;
+            margin-top: 2px;
+            background: white;
+            width: fit-content;
+        }
+        > li, .appname { //应用名字
+            position: relative;
+            width: auto;
+            /*>div > span.left{margin-right: 10px;}*/
+            .active {
+                background-color: @selected-color;
+                >div{color: white;
+                    >span{color:white;}
+                }
+            }
+            &.disable{
+                >div{color: gray;
+                    >span{color:gray;}
+                }
+            }
+
+            > ul,.topmenubar { //顶菜单栏
+                width: auto;
+                border: 1px #141643 solid;
+                background-color: @background-color;
+                position: absolute;
+                top: 100%;
+
+                &:after {content: ' ';display: table;clear: both;}
+
+                > li {//应用顶层菜单项
+                    float: left;
+                    text-align: center;
+                    position: relative;
+                    padding: 0 10px;
+                    /* 鼠标移动到选项上修改背景颜色 */
+                    /*&:hover {background-color: #555;color: white;}*/
+                    /*> div > span.tapkey{margin-right: 3px;}*/
+
+                    &:first-of-type > div { //应用名字
+                        font-weight: bold;
+                        width: max-content;
+                        > span.tapkey{font-weight: bold;}
+                    }
+
+                    ul, .firstdropdown{//一级下拉菜单
+                        width: max-content;
+                        background-color: @background-color;
+                        position: absolute;
+                        padding: auto 1px;
+                        padding-bottom: 3px;
+                        top: 100%;
+                        left:0;
+
+                        border: 1px @menu-border-color solid;
+                        border-bottom-left-radius: 2px;
+                        border-bottom-right-radius: 2px;
+
+                        li{
+                            position: relative;
+                            text-align: left;
+                            padding: 0 10px;
+                            &.sepli{
+                                padding: 0;
+                                div.sep {margin:2px 1px; height: 0;border-top: 2px #c2c2c2 solid;padding: 0;}
+                            }
+
+                            ul,.secdropdown {//二级平拉菜单
+                                position: absolute;
+                                border: 1px @menu-border-color solid;
+                                border-radius: 2px;
+                                left: 100%;
+                                top: 0;
+                                padding: 0 1px;
+                                padding-bottom: 3px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        &:after {display: block;content: '';clear: both;}
+    }
+</style>
+<!--TODO 无界面模式 后缀-->
+
+<script type="text/x-template" id="menuItem-template">
+    <li :class="{active: model.open, disable: !model.AXEnabled, sepli: isSeperator}">
+        <div :class="{sep: isSeperator, cmdtext: !isSeperator}" @click="toggle" @dbclick="changeType">
+            <span class="tapkey" :class="{justFirst :model.firstChar, topbar: model.AXRole !== 'AXMenuBarItem'}">{{model.tapKey}}</span>
+            {{model.title}}
+            <span v-if="mod" class='cmdModifiers'>{{mod}}</span>
+            <span v-if="hasSubMenus && (model.AXRole !== 'AXMenuBarItem')" class='arrow'> ▶ </span>
+        </div>
+
+        <ul v-show="model.open" v-if="hasSubMenus" ref="submenu">
+            <item class="menuItem" v-for="(model,index) in model.AXChildren[0]" :model="model" v-bind:key="model.id"></item>
+            <!--            <li class="add" @click="addChild">+</li>-->
+        </ul>
+    </li>
+</script>
+
+<ol id="appMenu">
+    <p> 菜单: {{menuPath.join(' > ')}}</p>
+    <item class="thismenuItem" :model="MenuStructure"></item>
+    <!--    <button @click="reset_data">data reset</button>-->
+    <!--    <button @click="submit_data">data submit</button>-->
+</ol>
+
+<!--<script src="./js/data.js"></script>-->
+<script>
+    var newdata = [{
+        "AXMenuItemMarkChar": "",
+        "AXRole": "AXMenuBarItem",
+        "AXEnabled": true,
+        "AXChildren": [[{
+            "AXMenuItemMarkChar": "",
+            "AXRole": "AXMenuItem",
+            "AXEnabled": false,
+            "AXTitle": "",
+            "AXMenuItemCmdGlyph": "",
+            "AXMenuItemCmdModifiers": ["cmd"],
+            "AXMenuItemCmdChar": ""
+        }, {
+            "AXMenuItemMarkChar": "",
+            "AXRole": "AXMenuItem",
+            "AXEnabled": false,
+            "AXTitle": "Services",
+            "AXChildren": [[ {
+                "AXMenuItemMarkChar": "",
+                "AXRole": "AXMenuItem",
+                "AXEnabled": true,
+                "AXTitle": "Toggle Instruments Recording",
+                "AXMenuItemCmdGlyph": "",
+                "AXMenuItemCmdModifiers": ["cmd"],
+                "AXMenuItemCmdChar": ""
+            }, {
+                "AXMenuItemMarkChar": "",
+                "AXRole": "AXMenuItem",
+                "AXEnabled": true,
+                "AXTitle": "Services Preferences…",
+                "AXMenuItemCmdGlyph": "",
+                "AXMenuItemCmdModifiers": ["cmd"],
+                "AXMenuItemCmdChar": ""
+            }]],
+            "AXMenuItemCmdGlyph": "",
+            "AXMenuItemCmdModifiers": ["cmd"],
+            "AXMenuItemCmdChar": ""
+        }, {
+            "AXMenuItemMarkChar": "",
+            "AXRole": "AXMenuItem",
+            "AXEnabled": false,
+            "AXTitle": "",
+            "AXMenuItemCmdGlyph": "",
+            "AXMenuItemCmdModifiers": ["cmd"],
+            "AXMenuItemCmdChar": ""
+        }, {
+            "AXMenuItemMarkChar": "",
+            "AXRole": "AXMenuItem",
+            "AXEnabled": false,
+            "AXTitle": "Hide IntelliJ IDEA",
+            "AXMenuItemCmdGlyph": "",
+            "AXMenuItemCmdModifiers": ["cmd"],
+            "AXMenuItemCmdChar": "H"
+        }, {
+            "AXMenuItemMarkChar": "",
+            "AXRole": "AXMenuItem",
+            "AXEnabled": false,
+            "AXTitle": "Quit and Keep Windows",
+            "AXMenuItemCmdGlyph": "",
+            "AXMenuItemCmdModifiers": ["cmd", "alt"],
+            "AXMenuItemCmdChar": "Q"
+        }]],
+        "AXTitle": "Chrome",
+        "AXMenuItemCmdGlyph": "",
+        "AXMenuItemCmdChar": ""
+    },{
+        "AXMenuItemMarkChar": "",
+        "AXRole": "AXMenuBarItem",
+        "AXEnabled": true,
+        "AXChildren": [[{
+            "AXMenuItemMarkChar": "",
+            "AXRole": "AXMenuItem",
+            "AXEnabled": false,
+            "AXTitle": "About IntelliJ IDEA",
+            "AXMenuItemCmdGlyph": "",
+            "AXMenuItemCmdModifiers": [],
+            "AXMenuItemCmdChar": ""
+        }, {
+            "AXMenuItemMarkChar": "",
+            "AXRole": "AXMenuItem",
+            "AXEnabled": false,
+            "AXTitle": "",
+            "AXMenuItemCmdGlyph": "",
+            "AXMenuItemCmdModifiers": ["cmd"],
+            "AXMenuItemCmdChar": ""
+        }, {
+            "AXMenuItemMarkChar": "",
+            "AXRole": "AXMenuItem",
+            "AXEnabled": false,
+            "AXTitle": "Services",
+            "AXChildren": [[ {
+                "AXMenuItemMarkChar": "",
+                "AXRole": "AXMenuItem",
+                "AXEnabled": true,
+                "AXTitle": "Toggle Instruments Recording",
+                "AXMenuItemCmdGlyph": "",
+                "AXMenuItemCmdModifiers": ["cmd"],
+                "AXMenuItemCmdChar": ""
+            }, {
+                "AXMenuItemMarkChar": "",
+                "AXRole": "AXMenuItem",
+                "AXEnabled": true,
+                "AXTitle": "Services Preferences…",
+                "AXMenuItemCmdGlyph": "",
+                "AXMenuItemCmdModifiers": ["cmd"],
+                "AXMenuItemCmdChar": ""
+            }]],
+            "AXMenuItemCmdGlyph": "",
+            "AXMenuItemCmdModifiers": ["cmd"],
+            "AXMenuItemCmdChar": ""
+        }, {
+            "AXMenuItemMarkChar": "",
+            "AXRole": "AXMenuItem",
+            "AXEnabled": false,
+            "AXTitle": "",
+            "AXMenuItemCmdGlyph": "",
+            "AXMenuItemCmdModifiers": ["cmd"],
+            "AXMenuItemCmdChar": ""
+        }, {
+            "AXMenuItemMarkChar": "",
+            "AXRole": "AXMenuItem",
+            "AXEnabled": false,
+            "AXTitle": "Quit IntelliJ IDEA",
+            "AXMenuItemCmdGlyph": "",
+            "AXMenuItemCmdModifiers": ["cmd"],
+            "AXMenuItemCmdChar": "Q"
+        }, {
+            "AXMenuItemMarkChar": "",
+            "AXRole": "AXMenuItem",
+            "AXEnabled": false,
+            "AXTitle": "Quit and Keep Windows",
+            "AXMenuItemCmdGlyph": "",
+            "AXMenuItemCmdModifiers": ["cmd", "alt"],
+            "AXMenuItemCmdChar": "Q"
+        }]],
+        "AXTitle": "文件",
+        "AXMenuItemCmdGlyph": "",
+        "AXMenuItemCmdChar": ""
+    }];
+    oldData = JSON.parse(JSON.stringify(newdata));
+    totalResult = {};
+
+    //reset menu data
+    console.time("开始vue界面");
+    MenuStructure = {"title": "", "AXChildren": [newdata], open: true};
+    var menuPath = [];
+    liveMenus = MenuStructure;
+
+    function init(pid, data) {
+        if (typeof data === 'undefined')
+            data = JSON.parse(JSON.stringify(totalResult[pid]));
+        else {
+            // alert("缓存pid    " + pid + data);  TODO 这里还有点问题
+            totalResult[pid] = JSON.parse(JSON.stringify(data));
+        }
+        try {
+            MenuStructure = {"title": "", "AXChildren": [data], open: true};
+            preprocess(data, MenuStructure, 0);
+
+            appMenu.MenuStructure = MenuStructure;
+            appMenu.menuPath = menuPath = [];
+
+            liveMenus = MenuStructure;
+        } catch (e) {alert(e);}
+    }
+    var zhenmap = { //部分来自这里 https://github.com/martnst/localize-mainmenu/blob/master/languages/zh-CN.json
+        "前置全部窗口" : "Bring All to Front",
+        "首字母大写" : "Capitalize",
+        "立即检查文稿" : "Check Document Now",
+        "检查拼写和语法" : "Check Grammar With Spelling",
+        "键入时检查拼写" : "Check Spelling While Typing",
+        "关闭" : "Close",
+        "拷贝" : "Copy",
+        "自动纠正拼写" : "Correct Spelling Automatically",
+        "剪切" : "Cut",
+        "删除" : "Delete",
+        "文件" : "File",
+        "编辑" : "Edit",
+        "视图" : "View",
+        "显示" : "View", //加了这一个
+        "查找" : "Find",
+        "查找下一个" : "Find Next",
+        "查找上一个" : "Find Previous",
+        "查找与替换\u2026" : "Find and Replace\u2026", //TODO 这个可能是...
+        "查找\u2026" : "Find\u2026",
+        "帮助" : "Help",
+        "隐藏其他" : "Hide Others",
+        "跳到所选内容" : "Jump to Selection",
+        "变为小写" : "Make Lower Case",
+        "变为大写" : "Make Upper Case",
+        "最小化" : "Minimize",
+        "打开\u2026" : "Open\u2026",
+        "粘贴" : "Paste",
+        "粘贴并匹配样式" : "Paste and Match Style",
+        "偏好设置\u2026" : "Preferences\u2026",
+        "重做" : "Redo",
+        "全选" : "Select All",
+        "服务" : "Services",
+        "全部显示" : "Show All",
+        "显示拼写和语法" : "Show Spelling and Grammar",
+        "显示替换" : "Show Substitutions",
+        "智能拷贝\/粘贴" : "Smart Copy\/Paste",
+        "智能破折号" : "Smart Dashes",
+        "智能链接" : "Smart Links",
+        "智能引号" : "Smart Quotes",
+        "语音" : "Speech",
+        "拼写" : "Spelling",
+        "拼写和语法" : "Spelling and Grammar",
+        "开始朗读" : "Start Speaking",
+        "停止朗读" : "Stop Speaking",
+        "替换" : "Substitutions",
+        "文本替换" : "Text Replacement",
+        "转换" : "Transformations",
+        "撤销" : "Undo",
+        "查找所选内容" : "Use Selection for Find",
+        "替换所选内容" : "Use Selection for Replace",
+        "窗口" : "Window",
+        "缩放" : "Zoom",
+        // null : "Bring <AppName> Window to Front",
+        "关于 <AppName>" : "About <AppName>",
+        "退出 <AppName>" : "Quit <AppName>",
+        "隐藏 <AppName>" : "Hide <AppName>",
+    };
+
+    /* mvvm之前先处理整合数据
+     *   菜单加按键, 判断菜单性质
+     */
+    function preprocess(menus, pmenu, level){
+        var cnt = 1;  //TODO 最终的重点没有
+        var key2subMenu = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0,
+            'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0, 'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0, 'L': 0,
+            'M': 0, 'N': 0, 'O': 0, 'P': 0, 'Q': 0, 'R': 0, 'S': 0, 'T': 0, 'U': 0, 'V': 0, 'W': 0, 'X': 0,
+            'Y': 0, 'Z': 0};
+        for (var i = 0; i < menus.length; i++) {
+            var menuItem = menus[i];
+            menuItem.open = false;
+            menuItem.level = level;
+            menuItem.id = (level + 1) * 100 + i;
+            menuItem.pmenu = pmenu;
+            menuItem.isbar = menuItem.AXTitle === '';
+            if (menuItem.isbar) {continue;}
+
+            menuItem.idx = cnt;
+
+            //如何取菜单首字母
+            //     中文? 有英文对应的菜单:拼音首字母
+            //     英文? 首字母
+            var tapkey = (
+                menuItem.AXTitle.charCodeAt(0) > 127 ?
+                    (zhenmap[menuItem.AXTitle]?
+                        zhenmap[menuItem.AXTitle][0]
+                        : Pinyin.convertToPinyin(menuItem.AXTitle)[0])[0]
+                    :menuItem.AXTitle[0]
+            );
+            //首字母 在本级菜单中可用
+            menuItem.tapKey = key2subMenu[tapkey] === 0 ? tapkey: false;
+            if(level === 0 && i === 0){
+                menuItem.tapKey = ' ';
+                key2subMenu['¾'] = menuItem;
+            } //应用名字区别开来
+
+            if (menuItem.tapKey) {
+                if(menuItem.tapKey === menuItem.AXTitle[0]){
+                    menuItem.firstChar = menuItem.tapKey;
+                    menuItem.title = menuItem.AXTitle.slice(1);
+                }else{
+                    menuItem.title = menuItem.AXTitle;
+                }
+                key2subMenu[menuItem.tapKey] = menuItem;
+            } else {
+                menuItem.title = menuItem.AXTitle;
+            }
+            menuItem.hasSubMenus = menuItem.AXChildren && menuItem.AXChildren.length;
+            if (menuItem.hasSubMenus) {
+                preprocess(menuItem.AXChildren[0], menuItem, level+1);
+            }
+
+            cnt = cnt + 1;
+        }
+        var keyList = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz";
+
+        for (var i = 0, j=-1; i < menus.length; i++) {
+            if(menus[i].idx && !menus[i].tapKey){
+                while(key2subMenu[keyList[++j]]);
+                menus[i].tapKey = keyList[j];
+                key2subMenu[menus[i].tapKey] = menus[i];
+            }
+        }
+        pmenu.keyDict = key2subMenu;
+    }
+    preprocess(newdata, MenuStructure, 0);
+    MenuStructure.keyDict[' '] = undefined;
+
+    var keymap = {
+        "2" : "⇥", "3" : "⇤", "4" : "⌤", "5" : "⇧", "6" : "⌃", "7" : "⌥", "9" : "␣", "10" : "⌦", "11" : "↩", "12" : "↪",
+        "15" : "", "16" : "↓", "17" : "⌘", "18" : "✓", "19" : "◇", "20" : "", "23" : "⌫", "24" : "←", "25" : "↑",
+        "26" : "→", "27" : "⎋", "28" : "⌧", "29" : "『", "30" : "』", "97" : "␢", "98" : "⇞", "99" : "⇪", "100" : "←",
+        "101" : "→", "102" : "↖", "103" : "﹖", "104" : "↑", "105" : "↘", "106" : "↓", "107" : "⇟", "109" : "",
+        "110" : "⌽", "111" : "F1", "112" : "F2", "113" : "F3", "114" : "F4", "115" : "F5", "116" : "F6", "117" : "F7",
+        "118" : "F8", "119" : "F9", "120" : "F10", "121" : "F11", "122" : "F12", "135" : "F13", "136" : "F14",
+        "137" : "F15", "138" : "⎈", "140" : "⏏", "141" : "英数", "142" : "かな", "143" : "F16", "144" : "F17",
+        "145" : "F18", "146" : "F19"};
+
+    less.refresh();  //重新解析less
+    var commandEnum = {cmd: '⌘', shift: '⇧', alt: '⌥', ctrl: '⌃'};
+
+    Vue.component('item', {
+        template: '#menuItem-template',
+        props: {model: Object},
+        data: function () {return {}},
+        computed: {
+            hasSubMenus: function () {
+                return this.model.AXChildren && this.model.AXChildren.length
+            },
+            isSeperator: function () {
+                return typeof this.model.idx === 'undefined' && this.model.AXEnabled === false;
+            },
+            mod: function () {
+                var CmdModifiers = '';
+                if (this.model.AXMenuItemCmdChar || this.model.AXMenuItemCmdGlyph) {
+                    for (var i = 0; i < this.model.AXMenuItemCmdModifiers.length; i++) {
+                        CmdModifiers = CmdModifiers + commandEnum[this.model.AXMenuItemCmdModifiers[i]];
+                    }
+
+                    var CmdChar = this.model.AXMenuItemCmdChar;
+                    var CmdGlyph = keymap[this.model.AXMenuItemCmdGlyph] || '';
+                    var CmdKeys = CmdChar + CmdGlyph;
+
+                    return CmdModifiers + CmdKeys;
+                }
+                return "";
+            }
+        },
+        watch:{
+            // 通过这种语法来watch就行，文档里有。。。看需求，还可以直接watch data，使用deep:true来深度观察
+            "model.open":{
+                handler: function(val,oldVal){
+                    //这里不知道怎么才能修改到this.data的数据，有知道的麻烦告知
+                    //现在知道的就是通过直接修改Store.state的方式来更新数据，当然效果和修改this.data是一样的
+                    // this.$refs.submenu.style.display = "block";
+                    window.setTimeout(function(){
+                        if (!(val===true && oldVal===false)) return;
+                        if(!this.model.hasSubMenus)return ;
+                        try{
+                            var elem = this.$refs.submenu;
+                            var rect = elem.getBoundingClientRect();
+                            var elemTop = rect.left;
+                            var elemBottom = rect.right;
+
+                            // Only completely visible elements return true:
+                            var isVisible = (elemTop >= 0) && (elemBottom <= window.innerWidth);
+                            // Partially visible elements return true:
+                            //isVisible = elemTop < window.innerHeight && elemBottom >= 0;
+                            if(!isVisible){
+                                window.scrollBy(elemBottom - window.innerWidth, 0);
+                            }
+                            // debugger;
+                            return isVisible;
+                        }catch(e){
+                            debugger; //TODO 有一次异常末尾的不用管
+                        }
+
+                    }.bind(this), 0.05);
+
+                },
+                // 深度观察
+                immediate: false
+            }
+        },
+        methods: {
+            toggle: function () {
+                if (this.hasSubMenus) {
+                    this.model.open = !this.model.open;
+                    // debugger;
+                    //
+                }
+            },
+            openChild: function (index) {
+                this.model.AXChildren[0][index].open = true;
+            },
+            changeType: function () {
+                if (!this.hasSubMenus) {
+                    // Vue.set(this.model, 'AXChildren', [[]]);
+                    // this.addChild();
+                    // this.open = true
+                }
+            },
+            addChild: function () {
+                this.model.AXChildren[0].push({AXTitle: '新名字'})
+            }
+        }
+    });
+
+     appMenu = new Vue({
+        el: '#appMenu',
+        data: {
+            menuPath: menuPath,
+            MenuStructure: MenuStructure
+        },
+        methods: {
+            reset_data: function () {
+                var that = this;
+                var apiUrl = '/manage/vue/vue_tree_widget_reset.json';
+                //这里用 that，因为 this 运行到这里绑定到 window 对象，而不是Vue实例
+                // jQuery.get(apiUrl, {}, TYM.genSuccCb(function (result) {that.MenuStructure = result.data.MenuStructure;}));
+            },
+            submit_data: function () {
+                var apiUrl = '/manage/vue/vue_tree_widget_update.json';
+                var MenuStructure = JSON.stringify(this.MenuStructure);
+                // jQuery.post(apiUrl, {MenuStructure:MenuStructure}, TYM.genSuccCb(function (result) {}));
+            }
+        }
+    });
+
+
+    console.timeEnd("开始vue界面");
+
+    var keyarray2 = "ASDFGHJKL;'ZXCVBNM,./";
+    var keyarray0 = "ASDFGHJKLºÞZXCVBNM¼¾¿";
+    var keyarray = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890¾"; //最后一个为应用名字准备的
+
+    function keyDown(event) {
+        event = event || window.event;
+        var keycode = event.keyCode;   //IE下取得键值的方法
+        var realkey = String.fromCharCode(event.keyCode);
+        if (event.ctrlKey || event.altKey || event.metaKey) {
+            window.e = event;
+            console.log("刚刚按下的带有 ctrl | alt | cmd ,不处理");
+            return ;
+        }
+        var rightKey =  -1 !== keyarray.indexOf(realkey) ;
+
+        console.log("按键码: " + keycode + " 字符: " + realkey + "序号: " + keyarray.indexOf(realkey));
+        if (rightKey) {
+            var meetMenuTreeEnd = !liveMenus.AXChildren || liveMenus.AXChildren.length === 0;
+            if (meetMenuTreeEnd) {
+                alert("返回结果吧        " + menuPath.toString());
+                return;
+            }
+            if (event.shiftKey) realkey = realkey.toLowerCase();
+            if (!liveMenus.keyDict[realkey] ) { //liveMenus.keyDict[realkey] .AXEnabled
+                alert("貌似不可选呀" + liveMenus.keyDict[realkey]);
+                return false;
+            }  //TODO 菜单异步同步问题 窗口误激活问题
+
+            liveMenus = liveMenus.keyDict[realkey];
+            liveMenus.open = true;
+            menuPath.push(liveMenus.AXTitle);
+            event.stopPropagation();
+
+            meetMenuTreeEnd = !liveMenus.AXChildren || !liveMenus.AXChildren.length;
+            if (meetMenuTreeEnd) {
+                // console.log(menuPath);
+                if (typeof passback === 'undefined') {
+                    alert("没找到函数");
+                    return ;
+                }
+
+                document.onkeydown = null;
+                window.setTimeout(function () {
+                    passback(menuPath);
+                    while (menuPath.length) menuPath.shift();
+                    while (liveMenus.pmenu) {
+                        liveMenus.open = false;
+                        liveMenus = liveMenus.pmenu;
+                    }
+                    document.onkeydown = keyDown;
+                }, 0.05);
+
+                return false;
+            }
+            return false
+        }else{
+            if( keycode === 27 || keycode === 186){ //esc  or 'º';
+                event.stopPropagation();
+                if(menuPath.length){
+                    liveMenus.open = false;
+                    liveMenus = liveMenus.pmenu;
+                    menuPath.pop();
+                    return false;
+                }else{
+                    if (typeof passback !== 'undefined') {
+                        passback(menuPath.concat(""));
+                        return false;
+                    }else{alert("没找到函数");}
+                }
+            }else if(keycode === 13){ // enter
+                event.stopPropagation();
+                if(menuPath.length ===0) return ;
+                if (typeof passback !== 'undefined') {
+                    passback(menuPath.concat(""));
+                    return false;
+                }
+                else {alert("没找到函数");}
+            }else if(keycode === 10){}
+            else if(keycode === 9){ /*tab*/}
+        }
+    }
+
+    function keyUp() {
+        var currKey = 0, e = e || event;
+        currKey = e.keyCode || e.which || e.charCode;
+        var keyName = String.fromCharCode(currKey);
+        console.log("按键码: " + currKey + " 字符: " + keyName);
+    }
+    document.onkeydown = keyDown;
+    // document.onkeyup = keyUp;
+</script>
+</body>
+</html>
