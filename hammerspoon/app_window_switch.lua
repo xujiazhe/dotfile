@@ -58,7 +58,7 @@ alt_app_key = {
     F      = 'com.apple.Stickies',
     --c = 'HandShaker',
 
-    c      = 'com.xk72.Charles',
+    h      = 'com.xk72.Charles',
     v      = 'org.virtualbox.app.VirtualBox',
     V      = 'org.virtualbox.app.VirtualBoxVM',
     o      = 'OpenSCAD',
@@ -77,11 +77,11 @@ alt_app_key = {
     N      = 'com.apple.Music',
 
     ['[']  = 'com.apple.AppStore',
-    i      = "com.colliderli.iina",
+    i      = "MPlayerX",
     [']']  = 'com.apple.TV',
     [';']  = 'com.apple.Photos',
     ['}']  = 'VLC',
-    ['\''] = 'MPlayerX',
+    ['\''] = 'com.colliderli.iina',
     ['.']  = 'com.apple.SystemProfiler',
     [',']  = 'com.apple.systempreferences',
     --k      = 'Motrix',

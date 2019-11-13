@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+alias h="history"
+alias cls="colorls"
+alias cman='/usr/bin/man -M /usr/local/share/man/cn' # TODO 如果没有打开中文网站
+
+function cman(){
+	/usr/bin/man -M /usr/local/share/man/cn $*
+	if [ $? -ne 0 ] ;then
+		o http://linux.51yip.com/search/$*
+	  	o https://linuxtools-rst.readthedocs.io/zh_CN/latest/tool/$1.html
+	  	o https://man.linuxde.net/$1
+	fi
+}
+
+# 在预览中查看 命令说明
+function m() {
+#	(man $* -t || echo "man exited with $?" 1>&2) | (open -f -a /Applications/Preview.app || echo "open 打开失败 $?" 1>&2)
+	if [ $# -eq 0 ] ; then echo "没有参数"; return 1; fi
+
+	cmdData=`/usr/bin/man $* -t`
+	code=$?
+	if [ $code -eq 0 ]; then
+		/usr/bin/man -t $* | open -f -a /System/Applications/Preview.app # <<< $cmdData
+	else
+		echo "man exited code $code"
+	fi
+}
