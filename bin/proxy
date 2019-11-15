@@ -28,7 +28,7 @@ PROXY_PAC_FILE="https://raw.githubusercontent.com/petronny/gfwlist2pac/master/gf
 SOCKS_PROC_CMD="ssh \
       -o PubkeyAuthentication=yes -o StrictHostKeyChecking=false -o PasswordAuthentication=no \
       -o TCPKeepAlive=yes  -o ServerAliveInterval=60 -o ServerAliveCountMax=3 \
-      -i .ssh/id_rsa.s -gfND $PROXY_PORT $SOCKS_PROC_USER@$SOCKS_PROC_HOST -p $SOCKS_PROC_PORT"
+      -i ~/.ssh/id_rsa.s -gfND $PROXY_PORT $SOCKS_PROC_USER@$SOCKS_PROC_HOST -p $SOCKS_PROC_PORT"
 
 #SOCKS_PROC_CMD="ssh -i $SOCKS_PROC_IDENTITY  -D $PROXY_HOST:$PROXY_PORT $SOCKS_PROC_USER@$SOCKS_PROC_HOST -p $SOCKS_PROC_PORT"
 

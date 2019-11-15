@@ -90,7 +90,7 @@ obj.result_show_style = {
 
     textFont = 'Iosevka Slab',
     textSize = 18,
-    
+
     strokeWidth = 2,
     strokeColor = {hex = "#00FCFF", alpha = 1},
     radius = 10
@@ -796,7 +796,7 @@ function current_selection()
 end
 
 function obj:rephraseTranslate()
-    self.prevFocusedWindow = hs.window.focusedWindow()
+    self.prevFocusedWindow = hs.window.focusedWindow() or hs.window.frontmostWindow()
     obj.text = current_selection()
     return self:rephrasePopup(obj.text)
 end
@@ -817,23 +817,30 @@ function obj:toggleGGState()
 end
 function obj:textTranslate()
     self.logger.df("fanyiSelectionPopup   uuid = ", uuid)
-    if self.uuid == 'zhanyong' then return end
+    --if self.uuid == 'zhanyong' then return end
+	if type(self.uuid) == 'number' then
+		if self.uuid + 5000000 < hs.timer.absoluteTime() then self.uuid = nil;
+		else return end
+	end
     if self.uuid then self.uuid = self:textResultHide(self.uuid) return
-    else self.uuid = 'zhanyong' end
-    self.prevFocusedWindow = hs.window.focusedWindow()
+    else self.uuid = hs.timer.absoluteTime() end
+    self.prevFocusedWindow = hs.window.focusedWindow() or hs.window.frontmostWindow()
     obj.text = current_selection()
     return self:sogouText(obj.text)
 end
 
 function obj:ocrTranslate()
     self.logger.df("ocrTranslate   uuid = ", self.uuid)
-    if self.uuid == 'zhanyong' then return end
+	if type(self.uuid) == 'number' then
+		if self.uuid + 5000000 < hs.timer.absoluteTime() then self.uuid = nil;
+		else return end
+	end
     if self.uuid then
         self:textResultHide(self.uuid)
         self.uuid = nil
         return
-    else self.uuid = 'zhanyong' end
-    self.prevFocusedWindow = hs.window.focusedWindow()
+    else self.uuid = hs.timer.absoluteTime() end
+    self.prevFocusedWindow = hs.window.focusedWindow() or hs.window.frontmostWindow()
     return self:ocrSogouText()
 end
 
@@ -847,10 +854,13 @@ function obj:translateYDPopup()
     self.logger.ef("translateYDPopup   uuid = ", self.uuid)
     if self.youdaoState == "text" then
         self.logger.ef("enter in")
-        if self.uuid == 'zhanyong' then return end
+		if type(self.uuid) == 'number' then
+			if self.uuid + 5000000 > hs.timer.absoluteTime() then self.uuid = nil;
+			else return end
+		end
         if self.uuid then self.uuid = self:textResultHide(self.uuid) return
-        else self.uuid = "zhanyong" end
-        self.prevFocusedWindow = hs.window.focusedWindow()
+        else self.uuid = hs.timer.absoluteTime() end
+        self.prevFocusedWindow = hs.window.focusedWindow() or hs.window.frontmostWindow()
         obj.text = current_selection()
         self.logger.df("going")
         return self:youdaoText(obj.text)
@@ -862,7 +872,7 @@ function obj:translateYDPopup()
             self.prevFocusedWindow:focus()
             return self
         end
-        self.prevFocusedWindow = hs.window.focusedWindow()
+        self.prevFocusedWindow = hs.window.focusedWindow() or hs.window.frontmostWindow()
         obj.text = current_selection()
         return self:webviewYDPopup(obj.text)
     end
@@ -878,7 +888,7 @@ function obj:translateBDPopup(to, from)
         return self
     end
     obj.text = current_selection()
-    self.prevFocusedWindow = hs.window.focusedWindow()
+    self.prevFocusedWindow = hs.window.focusedWindow() or hs.window.frontmostWindow()
     return self:webviewBDPopup(obj.text, "en", "zh")
 end
 
@@ -925,10 +935,13 @@ function obj:translateGGPopup(to, from)
     self.logger.ef("translateGGPopup   uuid = ", self.uuid)
     if self.GGState == "text" then
         self.logger.ef("enter in")
-        if self.uuid == "zhanyong" then return end
+		if type(self.uuid) == 'number' then
+			if self.uuid + 5000000 < hs.timer.absoluteTime() then self.uuid = nil;
+			else return end
+		end
         if self.uuid then self.uuid = self:textResultHide(self.uuid) return
-        else self.uuid = 'zhanyong' end
-        self.prevFocusedWindow = hs.window.focusedWindow()
+        else self.uuid = hs.timer.absoluteTime() end
+        self.prevFocusedWindow = hs.window.focusedWindow() or hs.window.frontmostWindow()
         obj.text = current_selection()
         self.logger.df("going")
 
@@ -946,7 +959,7 @@ function obj:translateGGPopup(to, from)
             return self
         end
         obj.text = current_selection()
-        self.prevFocusedWindow = hs.window.focusedWindow()
+        self.prevFocusedWindow = hs.window.focusedWindow() or hs.window.frontmostWindow()
         return self:webviewGGPopup(obj.text, to, from)
     end
 end
