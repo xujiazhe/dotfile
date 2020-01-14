@@ -177,6 +177,10 @@ local app2tabmenu = {
     ['com.jetbrains.intellij'] = {
         { "Window", "Editor Tabs", "Select Next Tab" },
         { "Window", "Editor Tabs", "Select Previous Tab" }
+    },
+    ['com.readdle.PDFExpert-Mac'] = {
+        { "窗口", "转到上一标签页" },
+        { "窗口", "转到下一标签" }
     }
 }
 

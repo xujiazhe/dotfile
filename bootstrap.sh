@@ -46,5 +46,3 @@ ln -sfn bin ~
 
 #  path,bash_prompt,exports,aliases,functions,extra}; do
 #	[ -r "$file" ] && [ -f "$file" ] && source "$file";
-
-

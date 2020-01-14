@@ -17,6 +17,7 @@ i = hs.inspect
 d = hs.fnutils.partial(hs.timer.doAfter, 2)
 
 fw = hs.window.focusedWindow
+faa=hs.application.frontmostApplication
 fmt = string.format
 bind = hs.hotkey.bind
 alert = hs.alert.show
@@ -85,10 +86,13 @@ end
   --post2app({}, "BRIGHTNESS_DOWN")
 --end)
 
-hs.console.darkMode(false)
+hs.console.darkMode(true)
 if hs.console.darkMode() then
-  hs.console.outputBackgroundColor{ white = 0 }
-  hs.console.consoleCommandColor{ white = 1 }
+	hs.console.outputBackgroundColor{ white = 0 }
+	hs.console.consoleCommandColor{ white = 1 }
+else
+	hs.console.outputBackgroundColor{ white = 1 }
+	hs.console.consoleCommandColor{ white = 0 }
 end
 
 --hs.console.consoleFont("Hack-Regular")

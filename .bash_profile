@@ -65,3 +65,7 @@ complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes Syste
 #function r() { grep "$1" ${@:2} -R . }
 # Create a folder and move into it in one command
 #function mkcd() { mkdir -p "$@" && cd "$_"; }
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="/Users/xujiazhe/.sdkman"
+[[ -s "/Users/xujiazhe/.sdkman/bin/sdkman-init.sh" ]] && source "/Users/xujiazhe/.sdkman/bin/sdkman-init.sh"

@@ -5,14 +5,15 @@ local log = hs.logger.new('app_window_switch.lua', 'debug')
 
 fn_app_key = {
     b     = "Typora",
-    n     = "com.apple.Notes",
+
     o     = 'com.apple.ActivityMonitor',
     v     = "com.tencent.xinWeChat",
     k     = "Karabiner-EventViewer",
     K     = 'Karabiner-Elements',
     --l = "BetterAndBetter",
     l     = "LightTable",
-    w     = 'automator',
+	w     = 'com.kingsoft.wpsoffice.mac',
+    --w     = 'automator',
     W     = 'Evernote',
 
     c     = 'Xcode',
@@ -54,7 +55,8 @@ alt_app_key = {
     ['R']  = 'com.apple.Preview',
     --['g'] = 'google chrome canary',
 
-    f      = 'com.electron.boostnote',
+    g      = 'com.electron.boostnote',
+    f     = "com.apple.Notes",
     F      = 'com.apple.Stickies',
     --c = 'HandShaker',
 
@@ -229,10 +231,10 @@ local function appKeyCatcher(event)
     return true, {}
 end
 
-local fnAltAppTapper = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, appKeyCatcher)  --leftMouseDragged
+fnAltAppTapper = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, appKeyCatcher)  --leftMouseDragged
 fnAltAppTapper:start()
 
-local flagTapper = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, monidiferCacher)
+flagTapper = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, monidiferCacher)
 flagTapper:start()
 
 fn_app_key['`'] = function()
@@ -254,6 +256,10 @@ kjAppTab = {
             {"Window", "Select Next Tab"},
             {"Window", "Select Previous Tab"}
     },
+    ['com.readdle.PDFExpert-Mac'] = {
+        { "窗口", "转到上一标签页" },
+        { "窗口", "转到下一标签" }
+    }
     --['com.jetbrains.intellij'] = {
     --        {"Window","Editor Tabs", "Select Next Tab"},
     --        {"Window","Editor Tabs", "Select Previous Tab"}
@@ -304,7 +310,7 @@ isFnOrAltWithShift = function(flags)
     end
 end
 
-text = function()
+appText = function()
     local keymap = [[1234567890-=
 !@#$%^&*()_+
 qwertyuiop[]\
@@ -350,7 +356,7 @@ ZXCVBNM<>?
 
     return helpContent
 end
-appSwitchKeyTableHelp = require('status-message').new(text())
+appSwitchKeyTableHelp = require('status-message').new(appText())
 
 
 -- 进入状态了后 再摁原键
@@ -368,7 +374,7 @@ end
 -- 颜色界面测试
 function appTableTest()
     local mod = require('status-message')
-    local obj = mod.new(text())
+    local obj = mod.new(appText())
     obj:show()
     hs.timer.doAfter(3, function()
         obj:hide()

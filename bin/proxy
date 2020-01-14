@@ -1,17 +1,40 @@
 #!/usr/bin/env bash
 
 set -e
-PROXY_INTERFACE="Wi-Fi"
-#PROXY_INTERFACE="iPhone USB"
-PROXY_HOST=127.0.0.1
-PROXY_PORT=1080
+
+if test -n "$2"; then
+  #PROXY_INTERFACES=("Broadcom NetXtreme Gigabit Ethernet Controller" "Wi-Fi" "iPhone USB")
+  IFS=$'\n'
+  PROXY_INTERFACES=($(networksetup -listallnetworkservices | sed -n '2,$p'))
+  if [[ ${#PROXY_INTERFACES[@]} -lt $2 ]]; then
+    echo -e "\\e[1;31m\tno such interface\\e[0m" >&2
+    printf '%s\n' "${PROXY_INTERFACES[@]}"
+    exit 1
+  else
+    PROXY_INTERFACE=${PROXY_INTERFACES[${2-0}]}
+  fi
+else
+  #PROXY_INTERFACE=$(hs -c 'hs.network.interfaceName()') #找到当前活跃的接口
+  IF=$(route -n get 0.0.0.0 2>/dev/null | awk '/interface: / {print $2}')
+  PROXY_INTERFACE=$(networksetup -listallhardwareports | sed -n "/^Device: $IF/{x;p;d;}; x" | sed -n -e 's/^Hardware Port: //p')
+fi
 
 # A host where ssh can login without interaction, with a key-based
 # authentication.
 SOCKS_PROC_USER="root"
-SOCKS_PROC_HOST="45.76.186.83"
-SOCKS_PROC_PORT=22
-SOCKS_PROC_IDENTITY=".ssh/id_rsa.s"
+SSH_SERVICES=(
+  66.42.57.102 1378
+  104.128.88.208 13378
+)
+SSH_CHOOSE=$((${3-0} * 2))
+SOCKS_PROC_HOST=${SSH_SERVICES[$SSH_CHOOSE]}
+SOCKS_PROC_PORT=${SSH_SERVICES[$SSH_CHOOSE + 1]}
+
+PROXY_HOST=127.0.0.1
+PROXY_PORT=1080
+
+#ssh-keygen -t rsa -b 4096
+SOCKS_PROC_IDENTITY="~/.ssh/id_rsa.s"
 
 SOCKS_PROC_LOG=/tmp/ssh-socks-proxy-log.txt
 SOCKS_PROC_PIDFILE=/tmp/ssh-socks-proxy-pid.txt
@@ -20,87 +43,199 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 PROXY_PAC_FILE="$DIR/gfwlist.pac"
 PROXY_PAC_FILE="https://raw.githubusercontent.com/petronny/gfwlist2pac/master/gfwlist.pac"
 
-#ssh -o PubkeyAuthentication=yes -o StrictHostKeyChecking=false -o PasswordAuthentication=no \
-#    -o TCPKeepAlive=yes  -o ServerAliveInterval=60 -o ServerAliveCountMax=3 \
-#    -i .ssh/id_rsa.s  -gfND 1080 root@45.76.186.83
-
-#-o PubkeyAuthentication=yes -o StrictHostKeyChecking=false -o PasswordAuthentication=no  -o ServerAliveInterval=60 -o ServerAliveCountMax=3 \
-SOCKS_PROC_CMD="ssh \
+SOCKS_PROC_CMD="autossh -M 0 \
+      -gCfN $SOCKS_PROC_USER@$SOCKS_PROC_HOST -p $SOCKS_PROC_PORT -i $SOCKS_PROC_IDENTITY -D $PROXY_PORT \
       -o PubkeyAuthentication=yes -o StrictHostKeyChecking=false -o PasswordAuthentication=no \
-      -o TCPKeepAlive=yes  -o ServerAliveInterval=60 -o ServerAliveCountMax=3 \
-      -i ~/.ssh/id_rsa.s -gfND $PROXY_PORT $SOCKS_PROC_USER@$SOCKS_PROC_HOST -p $SOCKS_PROC_PORT"
-
+      -o ServerAliveInterval=30 -o ServerAliveCountMax=2 -o  ExitOnForwardFailure=yes"
+# ssh bu -gCfND 1080
 #SOCKS_PROC_CMD="ssh -i $SOCKS_PROC_IDENTITY  -D $PROXY_HOST:$PROXY_PORT $SOCKS_PROC_USER@$SOCKS_PROC_HOST -p $SOCKS_PROC_PORT"
-
+echo -e "====================\e[33m" $PROXY_INTERFACE "\e[0m========================"
 
 if [[ $1 == "on" ]]; then
-    nohup $SOCKS_PROC_CMD > "$SOCKS_PROC_LOG" 2>&1 # &
-    echo $(lsof -i:$PROXY_PORT | awk '/ssh / && /\ \(LISTEN\)/{print $2}' | uniq) > "$SOCKS_PROC_PIDFILE"
-#    networksetup -setsocksfirewallproxy "$PROXY_INTERFACE" $PROXY_HOST $PROXY_PORT
-#    networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" on
-#    networksetup -setproxybypassdomains "$PROXY_INTERFACE" localhost 127.0.0.1/8 ::1 *.lan 169.254/16 192.168.*.* *.baidu.com *.sogou.com *.youdao.com *.weibo.com *.weixin.com *.qq.com *.sohu.com *.163.com
+  nohup $SOCKS_PROC_CMD >"$SOCKS_PROC_LOG" 2>&1 # &
+  echo $(pgrep -n autossh) >"$SOCKS_PROC_PIDFILE"
+  #echo $(lsof -i:$PROXY_PORT -R | awk '/ssh / && /\ \(LISTEN\)/{print $3}' | uniq) >"$SOCKS_PROC_PIDFILE"
+  networksetup -setsocksfirewallproxy "$PROXY_INTERFACE" $PROXY_HOST $PROXY_PORT
+  networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" on
 
+  #networksetup -setproxybypassdomains "$PROXY_INTERFACE" localhost 127.0.0.1/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254/16 192.168.*.* ::1 *.lan  *.baidu.com *.sogou.com *.youdao.com *.weibo.com *.weixin.com *.qq.com *.sohu.com *.163.com
+  bypassips='localhost 127.0.0.1/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254/16 192.168.*.* ::1 *.lan *.baidu.com *.sogou.com *.youdao.com *.taobao.com *.weibo.com *.weixin.com *.qq.com *.sohu.com *.163.com'
+  test -e /tmp/chnroutes.txt || curl https://raw.githubusercontent.com/ym/chnroutes2/master/chnroutes.txt -o /tmp/chnroutes.txt
+  domains=$(sed '/^# /d' /tmp/chnroutes.txt)
+  networksetup -setproxybypassdomains "$PROXY_INTERFACE" $bypassips $domains
 
-    networksetup -setautoproxystate "$PROXY_INTERFACE" off
-    networksetup -setautoproxyurl "$PROXY_INTERFACE" $PROXY_PAC_FILE
-    networksetup -getautoproxyurl "$PROXY_INTERFACE"
-    cat "$SOCKS_PROC_PIDFILE"
-    echo "SOCKS proxy enabled"
+  cat "$SOCKS_PROC_PIDFILE"
+  echo "SOCKS proxy enabled"
 
 elif [[ $1 == "off" ]]; then
-    kill -9 $(cat "$SOCKS_PROC_PIDFILE")
-    rm "$SOCKS_PROC_PIDFILE"
-    networksetup -setautoproxystate "$PROXY_INTERFACE" off
-#    networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" off
-    echo "SOCKS proxy disabled"
-
+  networksetup -setautoproxystate "$PROXY_INTERFACE" off
+  networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" off
+  kill -s SIGTERM $(cat "$SOCKS_PROC_PIDFILE")
+  rm "$SOCKS_PROC_PIDFILE"
+  echo "SOCKS proxy disabled"
 elif [[ $1 == "status" ]]; then
-    echo "======================================================"
-    #networksetup -listallnetworkservices     -listallhardwareports  -getnetworkserviceenabled
-    echo "Current (SOCKS) Proxy Settings:"
-    echo "======================================================"
+  res=$(
+    echo 'pac\t'
     networksetup -getautoproxyurl "$PROXY_INTERFACE"
-#    networksetup -getsocksfirewallproxy "$PROXY_INTERFACE"
-    tail "$SOCKS_PROC_LOG"
-    ps -p $(cat "$SOCKS_PROC_PIDFILE")
-    echo
+    echo '\nsocks\t'
+    networksetup -getsocksfirewallproxy "$PROXY_INTERFACE"
+  )
+  format_res=$(echo $res | sed 's/ Enabled\: Yes/ \\e[1;32mEnabled: Yes\\e[0m/g' | sed 's/ Enabled\: No/ \\e[1;31mEnabled: No\\e[0m/g')
+  echo -e $format_res
+  echo "======================================================"
+  if test -e $SOCKS_PROC_PIDFILE && (ps -p $(cat "$SOCKS_PROC_PIDFILE") || pstree -s autossh) >/dev/null; then
+    ps -p $(cat "$SOCKS_PROC_PIDFILE") #$(pgrep -n autossh)  #摸不清楚到底死了没有
+    pstree -s autossh
+  else
+    echo "没有活跃进程" $(cat "$SOCKS_PROC_PIDFILE")
+  fi
+  tail "$SOCKS_PROC_LOG"
+  echo
+elif [[ $1 == "update" ]]; then
+  kill -s SIGUSR1 $(cat "$SOCKS_PROC_PIDFILE")
+  networksetup -setsocksfirewallproxy "$PROXY_INTERFACE" $PROXY_HOST $PROXY_PORT
+  networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" on
+elif [[ $1 == "t" ]]; then
+  if networksetup -getautoproxyurl "$PROXY_INTERFACE" | grep "Enabled: No" >/dev/null; then
+    networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" off
+    networksetup -setautoproxystate "$PROXY_INTERFACE" off
+    networksetup -setautoproxyurl "$PROXY_INTERFACE" $PROXY_PAC_FILE
+  else
+    networksetup -setautoproxystate "$PROXY_INTERFACE" off
+    networksetup -setsocksfirewallproxy "$PROXY_INTERFACE" $PROXY_HOST $PROXY_PORT
+    networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" on
+  fi
+  proxy status $2
+elif [[ $1 == "terminal" ]]; then
+  #https://gist.github.com/fearblackcat/850c6e027d5a03017c44daaa6a7ffc30
+  if test -z $socks_proxy; then
+    printf "开启终端代理\n
+    export http_proxy=$PROXY_PAC_FILE
+    export https_proxy=$PROXY_PAC_FILE
+    export all_proxy=$PROXY_PAC_FILE
 
+    export http_proxy=socks5://$PROXY_HOST:$PROXY_PORT
+    export https_proxy=socks5://$PROXY_HOST:$PROXY_PORT
+    export all_proxy=socks5://$PROXY_HOST:$PROXY_PORT
+
+    export socks_proxy=socks5://$PROXY_HOST:$PROXY_PORT"
+  else
+    printf "关闭终端代理\n unset http_proxy\n unset https_proxy\n unset all_proxy\n unset socks_proxy\n"
+  fi
 else
-    echo "`basename $0` toggles SOCKS proxy settings on OS X"
-    echo
-    echo "Usage: "
-    echo "  $ proxy on           # turns SOCKS proxy on"
-    echo "  $ proxy off          # turns SOCKS proxy off"
-    echo "  $ proxy status       # prints status of proxy settings"
-    echo
-    echo "proxy interface:      " $PROXY_INTERFACE
-    echo "proxy host:           " $PROXY_HOST
-    echo "proxy port:           " $PROXY_PORT
-    echo
-    exit 65 # end process with error to indicate incorrect arguments
+  echo "$(basename $0) toggles SOCKS proxy settings on OS X"
+  echo
+  echo "Usage: "
+  echo "  $ proxy on           # turns SOCKS proxy on"
+  echo "  $ proxy off          # turns SOCKS proxy off"
+  echo "  $ proxy status       # prints status of proxy settings"
+  echo "  $ proxy status       # fresh SOCKS on interface"
+  echo
+  echo "proxy interface:      " $PROXY_INTERFACE
+  echo "proxy host:           " $PROXY_HOST
+  echo "proxy port:           " $PROXY_PORT
+  echo
+  exit 65 # end process with error to indicate incorrect arguments
 fi
 
-
 #可以动态注入的
-#https://gist.github.com/dgoguerra/66d496345ee7e53169ad
-
 #proxy on mac
-setproxy(){
-  #https://gist.github.com/fearblackcat/850c6e027d5a03017c44daaa6a7ffc30
-  export http_proxy=$PROXY_PAC_FILE
-  export https_proxy=$PROXY_PAC_FILE
-  export ALL_PROXY=$PROXY_PAC_FILE
-
-#  export http_proxy=socks5://127.0.0.1:1080
-#  export https_proxy=socks5://127.0.0.1:1080
-#  export ALL_PROXY=socks5://127.0.0.1:1080
-  alias unsetproxy="unset ALL_PROXY; unset http_proxy; unset https_proxy;"
+setproxy() {
   alias ip="curl http://wtfismyip.com/json"
   #git config --global http.proxy 'socks5://192.168.1.2:1080'
   #git config --global https.proxy 'socks5://192.168.1.2:1080'
 }
 
-alias unsetproxy="unset ALL_PROXY; unset http_proxy; unset https_proxy;"
-
 #如果不能用socks5
 #代理转换  https://blog.fazero.me/2015/08/31/%E5%88%A9%E7%94%A8proxychains%E5%9C%A8%E7%BB%88%E7%AB%AF%E4%BD%BF%E7%94%A8socks5%E4%BB%A3%E7%90%86/
+
+# curl --socks5-hostname localhost:1080 https://raw.githubusercontent.com/petronny/gfwlist2pac/master/gfwlist.pac -o ~/bin/my.pac
+# sed  -i 's/SOCKS5 127.0.0.1:1080/SOCKS5 192.168.1.102:1080/'  ~/bin/my.pac
+
+# sed -i -e "/127.0.0.1:1080/c\\
+# var proxy = 'SOCKS5 192.168.1.102:1080';\\
+# " ~/bin/my.pac;
+
+# polipo socksParentProxy=localhost:1080  proxyAddress='::0'
+# polipo -c ~/.poliporc
+# http端口给iphone用
+
+#  brew install proxychains-ng    https://github.com/haad/proxychains
+# ~/.proxychains/proxychains.conf
+#[ProxyList]
+# socks5 127.0.0.1 1080
+#proxychains4 wget www.google.com
+
+#http_proxy=http://localhost:8123 apt-get update
+#http_proxy=http://localhost:8123 curl www.google.com
+#http_proxy=http://localhost:8123 wget www.google.com
+#git config --global http.proxy 127.0.0.1:8123
+#git clone https://github.com/xxx/xxx.git
+#git config --global --unset-all http.proxy
+#/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+#--proxy-server="socks5://127.0.0.1:1337" \
+#--host-resolver-rules="MAP * 0.0.0.0 , EXCLUDE localhost"
+
+# vultr centos8 修改ssh默认端口
+change_ssh_port() {
+  SSHPORT=$1
+  if [[ "$SSHPORT" =~ ^[0-9]{2,5}$ || "$SSHPORT" == 22 ]]; then
+    if [[ "$SSHPORT" -ge 1024 && "$SSHPORT" -le 65535 || "$SSHPORT" == 22 ]]; then
+      # Create backup of current SSH config
+      NOW=$(date +"%m_%d_%Y-%H_%M_%S")
+      cp /etc/ssh/sshd_config /etc/ssh/sshd_config.inst.bckup.$NOW
+      # Apply changes to sshd_config
+      sed -i -e "/Port /c\Port $SSHPORT" /etc/ssh/sshd_config
+      echo -e "Restarting SSH in 5 seconds. Please wait.\n"
+      sleep 5
+      semanage port -a -t ssh_port_t -p tcp $SSHPORT
+      /bin/systemctl restart sshd.service
+      echo ""
+      echo -e "The SSH port has been changed to $SSHPORT. Please login using that port to test BEFORE ending this session.\n"
+      exit 0
+    else
+      echo -e "Invalid port: must be 22, or between 1024 and 65535."
+      echo -n "Please enter the port you would like SSH to run on > "
+    fi
+  else
+    echo -e "Invalid port: must be numeric!"
+    echo -n "Please enter the port you would like SSH to run on > "
+  fi
+}
+# change_ssh_port 3456
+
+change_sshd_port() {
+  semanage port -a -t ssh_port_t -p tcp 13378
+  firewall-cmd --permanent --zone=public --add-port=22/tcp
+  firewall-cmd --permanent --zone=public --add-port=13378/tcp
+  firewall-cmd --reload
+  /bin/systemctl restart sshd.service
+}
+# https://segmentfault.com/a/1190000018277467
+# networksetup -listallhardwareports 查看当前所有端口Mac地址
+# sudo ifconfig en1 ether e4:ce:8f:32:51:82 修改
+# en1是WiFi标记 e4:ce:8f:32:51:82 是目标Mac地址
+# ifconfig en1 | grep ether 查看是否修改成功
+# 电脑重启mac地址复原
+
+#color morning
+#nnoremap <F2> :exe getline(".")<CR>
+
+#color default
+#color blue
+#colorscheme desert
+#color evening
+#color koehler
+#color murphy
+#color peachpuff
+#color shine
+#color torte
+#color darkblue
+#color delek
+#color elflord
+#color industry
+#color morning
+#color pablo
+#color ron
+#color slate
+#color zellner

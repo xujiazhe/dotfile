@@ -2,7 +2,6 @@
 
 alias h="history"
 alias cls="colorls"
-alias cman='/usr/bin/man -M /usr/local/share/man/cn' # TODO 如果没有打开中文网站
 
 function cman(){
 	/usr/bin/man -M /usr/local/share/man/cn $*

@@ -174,7 +174,6 @@ local function WinOpsCatcher(event)
             return true, {}
         end
         local fw = fw()
-        p("fw = "..i(fw))
         hs.application.launchOrFocusByBundleID('com.apple.iCal')
         local calendar = hs.application'日历' or hs.application'Calendar'
         calendar:activate(); calendar:selectMenuItem({ "显示", "隐藏日历列表" })  -- 激活后才能使用
@@ -214,28 +213,3 @@ local windowsOpsTapper = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, Wi
 windowsOpsTapper:start()
 
 return windowsOpsTapper;
-
-
---local function WinOpsHandler(event)
---    local status = pcall(WinOpsHandler, event)
---    print("status ", status)
---    print("err ", err)
---
---    if status == true then
---        return true, {}
---        -- print("WinOpsCatcher so far so good")
---    else
---        print("That method is broken, fix it!")
---        return false
---    end
---
---end
--- 新窗口激活 状态变化
--- 窗口大小调整状态
--- 切换状态
--- 快键程序表格
-
--- 在
-
-
-

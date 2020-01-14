@@ -40,7 +40,7 @@ spoon.SpoonInstall.repos.zzspoons = {
     url = "https://github.com/zzamboni/zzSpoons",
     desc = "zzamboni's spoon repository",
 }
-
+ASSIST_PORT=8520
 spoon.SpoonInstall.use_syncinstall = true
 
 
@@ -64,15 +64,16 @@ Install:andUse("MultiTranslate",
                 popup_style = wm.utility | wm.HUD | wm.titled | wm.closable | wm.resizable,
             },
             hotkeys = {
-                text = { hyper, "s" },
-                YouDao = { hyper, "f" },
-                BaiDu = { hyper, "d" },
-                translate_to_zh = { hyper, "a" },
-                ocr = { hyper, "r" },
-                chuan = { hyper, "l" },
-                chuan = { hyper, "l" },
-                youdaotoggle = {shift_hyper, "f"},
-                ggtoggle = {shift_hyper, "a"},
+				translate_to_zh = { hyper, "a" },
+                sogou_text = { hyper, "s" },
+				baidu = { hyper, "d" },
+                youdao = { hyper, "f" },
+				sogou_ocr = { hyper, "r" },
+
+				ggtoggle = {shift_hyper, "a"},
+				bdtoggle = {shift_hyper, "d"},
+                ydtoggle = {shift_hyper, "f"},
+                chuan = { hyper, "x" },
                 --translate_to_de = { hyper, "d" },
                 --translate_to_es = { hyper, "s" },
                 --translate_de_en = { shift_hyper, "e" },
@@ -80,6 +81,8 @@ Install:andUse("MultiTranslate",
             }
         }
 )
+
+-- spoon.MultiTranslate.result_show_style.textSize = 32   TODO
 
 
 -- Speech Syntheziser  todo 中英分开后分别朗读
@@ -104,7 +107,6 @@ end)
 --dofile("./anytranslate/anytranslate.lua")
 
 --Install:andUse("TimeLine", { colors = { ["U.S."] = {col.green, col.white, col.red}, ["搜狗拼音"] = {col.black, col.red, col.yellow}, }, start = true })
-
 
 local localstuff = loadfile(hs.configdir .. "/init-local.lua")
 if localstuff then localstuff() end
@@ -147,12 +149,30 @@ function timeReminder()
     hs.alert("不跑偏 抓重点¡!")
     hs.timer.doAfter(1 * 30 * 60, timeReminder)
 end
---hs.timer.doAfter(1 * 30 * 60, timeReminder)
+hs.timer.doAfter(1 * 30 * 60, timeReminder)
 
 --hs.eventtap.keyStroke({"fn"}, "z")  -- 默认启动时间轴模式
 
 --Install:andUse("TimeFlow")
+dofile("./menu_nav_key.lua")
 
 return hs
 
--- grep "MYHSFIX" -A20  ~/.hammerspoon/Spoons/MultiTranslate.spoon/init.lua
+--'/Library/Application Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli' --select-profile '我的键盘'
+
+
+
+-- 为了跟着鼠标焦点显示 需要在扩展  /Applications/Hammerspoon.app/Contents/Resources/extensions/hs/alert/init.lua
+-- 开头添加   local mouse   = require("hs.mouse")
+-- showAlert 函数中 thisAlertStyle.atScreenEdge == 2 添加如下分支
+-- elseif thisAlertStyle.atScreenEdge == 3 then
+--    local pos = mouse.getAbsolutePosition()
+--    print("pos = ", pos.x, pos.y)
+--    drawingFrame.x = pos.x
+--    drawingFrame.y = pos.y
+--    if drawingFrame.x + drawingFrame.w > screenFrame.x+screenFrame.w then
+--        drawingFrame.x = screenFrame.x+screenFrame.w - drawingFrame.w
+--    end
+--    if drawingFrame.y + drawingFrame.h > screenFrame.y+screenFrame.h then
+--        drawingFrame.y = screenFrame.y+screenFrame.h - drawingFrame.h
+--    end

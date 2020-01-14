@@ -46,12 +46,11 @@ echo "Done! Remember to enable Accessibility for Hammerspoon."
 #  辅助功能 鼠标与触控板  触控板选项 拖移
 #  辅助功能 显示 减弱动态效果。提高对比度
 #  辅助中的语音 Tom mei-jia. Sam
-#
-#
-#
+
+
 #  rm -rf ~/.config/karabiner
 #  ln -sfn $PWD/karabiner ~/.config/
-#
+
 #  ln -sfn $PWD/hammerspoon ~/.hammerspoon
 
 
@@ -71,8 +70,12 @@ echo "Done! Remember to enable Accessibility for Hammerspoon."
 #
 #  tb3
 #    https://github.com/rgov/Thunderbolt3Unblocker/releases
-#
-#  proxychains-ng    https://github.com/haad/proxychains
 
 # https://github.com/kuoruan/shell-scripts
 # https://ssr.tools/588  一装就挂
+
+
+
+#ID   https://icpc.baylor.edu/ICPCID/TJIWVK522BOO
+#https://www.linkedin.com/in/jiazhe-xu-03545548/
+
