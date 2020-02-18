@@ -205,7 +205,7 @@ local function appKeyCatcher(event)
         local res = appName()
         --clearState(true)
         if res == false then return false
-        else return true, {} end
+        else return true end
     end
 
     log.f("appName = '%s'", appName, "\n")
@@ -228,7 +228,7 @@ local function appKeyCatcher(event)
     end
     targetAppFocused, targetAppWinCnt = toggleAppWins(appName)
     lastAppKey = targetAppKey
-    return true, {}
+    return true
 end
 
 fnAltAppTapper = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, appKeyCatcher)  --leftMouseDragged
@@ -259,7 +259,11 @@ kjAppTab = {
     ['com.readdle.PDFExpert-Mac'] = {
         { "窗口", "转到上一标签页" },
         { "窗口", "转到下一标签" }
-    }
+    },
+	['com.apple.Preview'] = {
+		{ "窗口", "显示上一个标签页" },
+        { "窗口", "显示下一个标签页" }
+	}
     --['com.jetbrains.intellij'] = {
     --        {"Window","Editor Tabs", "Select Next Tab"},
     --        {"Window","Editor Tabs", "Select Previous Tab"}

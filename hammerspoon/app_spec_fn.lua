@@ -181,7 +181,11 @@ local app2tabmenu = {
     ['com.readdle.PDFExpert-Mac'] = {
         { "窗口", "转到上一标签页" },
         { "窗口", "转到下一标签" }
-    }
+    },
+	['com.apple.Preview'] = {
+		{ "窗口", "显示上一个标签页" },
+        { "窗口", "显示下一个标签页" }
+	}
 }
 
 --app2tabmenu ={

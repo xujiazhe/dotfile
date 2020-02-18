@@ -1,3 +1,4 @@
+#!/bin/bash
 #!/usr/bin/env bash
 
 set -e
@@ -7,7 +8,7 @@ if test -n "$2"; then
   IFS=$'\n'
   PROXY_INTERFACES=($(networksetup -listallnetworkservices | sed -n '2,$p'))
   if [[ ${#PROXY_INTERFACES[@]} -lt $2 ]]; then
-    echo -e "\\e[1;31m\tno such interface\\e[0m" >&2
+    echo -e "\\033[1;31m\tno such interface\\033[0m" >&2
     printf '%s\n' "${PROXY_INTERFACES[@]}"
     exit 1
   else
@@ -16,6 +17,7 @@ if test -n "$2"; then
 else
   #PROXY_INTERFACE=$(hs -c 'hs.network.interfaceName()') #找到当前活跃的接口
   IF=$(route -n get 0.0.0.0 2>/dev/null | awk '/interface: / {print $2}')
+  if test -z $IF; then  exit 10; fi
   PROXY_INTERFACE=$(networksetup -listallhardwareports | sed -n "/^Device: $IF/{x;p;d;}; x" | sed -n -e 's/^Hardware Port: //p')
 fi
 
@@ -23,7 +25,8 @@ fi
 # authentication.
 SOCKS_PROC_USER="root"
 SSH_SERVICES=(
-  66.42.57.102 1378
+  139.180.217.0 1378
+  139.180.209.248 22
   104.128.88.208 13378
 )
 SSH_CHOOSE=$((${3-0} * 2))
@@ -49,7 +52,13 @@ SOCKS_PROC_CMD="autossh -M 0 \
       -o ServerAliveInterval=30 -o ServerAliveCountMax=2 -o  ExitOnForwardFailure=yes"
 # ssh bu -gCfND 1080
 #SOCKS_PROC_CMD="ssh -i $SOCKS_PROC_IDENTITY  -D $PROXY_HOST:$PROXY_PORT $SOCKS_PROC_USER@$SOCKS_PROC_HOST -p $SOCKS_PROC_PORT"
-echo -e "====================\e[33m" $PROXY_INTERFACE "\e[0m========================"
+
+center() {
+  termwidth="$(tput cols)"
+  padding="$(printf '%0.1s' -{1..500})"
+  printf '%*.*s \e[1;33m%s\e[m %*.*s\n' 0 "$(((termwidth-2-${#1})/2))" "$padding" "$1" 0 "$(((termwidth-1-${#1})/2))" "$padding"
+}
+center "$PROXY_INTERFACE";
 
 if [[ $1 == "on" ]]; then
   nohup $SOCKS_PROC_CMD >"$SOCKS_PROC_LOG" 2>&1 # &
@@ -80,12 +89,12 @@ elif [[ $1 == "status" ]]; then
     echo '\nsocks\t'
     networksetup -getsocksfirewallproxy "$PROXY_INTERFACE"
   )
-  format_res=$(echo $res | sed 's/ Enabled\: Yes/ \\e[1;32mEnabled: Yes\\e[0m/g' | sed 's/ Enabled\: No/ \\e[1;31mEnabled: No\\e[0m/g')
+  format_res=$(echo $res | sed 's/ Enabled\: Yes/ \\033[31;32;5mEnabled: Yes\\033[0m/g' | sed 's/ Enabled\: No/ \\033[37;31;5mEnabled: No\\033[0m/g')
   echo -e $format_res
-  echo "======================================================"
-  if test -e $SOCKS_PROC_PIDFILE && (ps -p $(cat "$SOCKS_PROC_PIDFILE") || pstree -s autossh) >/dev/null; then
+  center
+  if test -e $SOCKS_PROC_PIDFILE && (ps -p $(cat "$SOCKS_PROC_PIDFILE") || pgrep -x autossh) >/dev/null; then
     ps -p $(cat "$SOCKS_PROC_PIDFILE") #$(pgrep -n autossh)  #摸不清楚到底死了没有
-    pstree -s autossh
+    ps -fg $(pgrep -x autossh)   # pstree -s autossh
   else
     echo "没有活跃进程" $(cat "$SOCKS_PROC_PIDFILE")
   fi
@@ -129,7 +138,9 @@ else
   echo "  $ proxy on           # turns SOCKS proxy on"
   echo "  $ proxy off          # turns SOCKS proxy off"
   echo "  $ proxy status       # prints status of proxy settings"
-  echo "  $ proxy status       # fresh SOCKS on interface"
+  echo "  $ proxy update       # fresh SOCKS on interface"
+  echo "  $ proxy t            # toggle SOCKS/PAC proxy on interface"
+  echo "  $ proxy terminal     # 终端下的代理命令"
   echo
   echo "proxy interface:      " $PROXY_INTERFACE
   echo "proxy host:           " $PROXY_HOST
@@ -189,6 +200,8 @@ change_ssh_port() {
       echo -e "Restarting SSH in 5 seconds. Please wait.\n"
       sleep 5
       semanage port -a -t ssh_port_t -p tcp $SSHPORT
+      firewall-cmd --permanent --zone=public --add-port=1378/tcp
+      firewall-cmd --reload
       /bin/systemctl restart sshd.service
       echo ""
       echo -e "The SSH port has been changed to $SSHPORT. Please login using that port to test BEFORE ending this session.\n"
@@ -204,7 +217,7 @@ change_ssh_port() {
 }
 # change_ssh_port 3456
 
-change_sshd_port() {
+change_sshd_port2() {
   semanage port -a -t ssh_port_t -p tcp 13378
   firewall-cmd --permanent --zone=public --add-port=22/tcp
   firewall-cmd --permanent --zone=public --add-port=13378/tcp

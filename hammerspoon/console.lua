@@ -79,7 +79,7 @@ function post2app(mods, key, tapp)
   --hs.eventtap.event.newSystemKeyEvent(key, false):post(tapp)
 end
 
-
+--d(function() hs.eventtap.event.newSystemKeyEvent('BRIGHTNESS_DOWN', true):post() hs.eventtap.event.newSystemKeyEvent('BRIGHTNESS_DOWN', false):post() end)
 --post2app({ "ctrl" }, "F5" , nil);
 --hs.timer.doAfter(2, function()
   --post2app({ "ctrl" }, "F5" , nil);

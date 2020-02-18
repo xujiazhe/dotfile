@@ -140,7 +140,7 @@ function build_layout(numberOfScreens)
     print("Building layout for " .. numberOfScreens .. " screens")
     -- TODO: memo-ize screens
     local primaryScreen, secondaryScreen, tertiaryScreen = hs.screen{x=0,y=0}, hs.screen{x=1,y=0}, hs.screen{x=-1,y=0}
-     
+
     -- print("primaryScreen: ")
     -- print(hs.inspect(primaryScreen))
     -- print("secondaryScreen: ")
@@ -204,12 +204,12 @@ function build_layout(numberOfScreens)
             { "Google Chrome", nil, primaryScreen, hs.layout.maximized, nil, nil },
             { "Yandex", nil, primaryScreen, hs.layout.maximized, nil, nil },
             { "Safari", nil, primaryScreen, hs.layout.maximized, nil, nil },
-            
+
             { "IntelliJ IDEA", nil, secondaryScreen, hs.layout.maximized, nil, nil },
             { "PyCharm", nil, secondaryScreen, hs.layout.maximized, nil, nil },
             { "Beyond Compare", nil, secondaryScreen, hs.layout.maximized, nil, nil },
             { "iTerm2", nil, secondaryScreen, hs.layout.right50, nil, nil },
-            
+
             { "Notes", nil, tertiaryScreen, topLeftRect, nil, nil },
             { "Calendar", nil, tertiaryScreen, topRightRect, nil, nil },
             { "Mail", nil, tertiaryScreen, bottomLeftRect, nil, nil },
@@ -276,7 +276,7 @@ function usbDeviceCallback(data)
     --TODO 需要延迟执行吗? 如果是双线呢?
     --local event = data["eventType"]
     --p(hs.network.interfaceName())
-    
+
     --TODO    有LAN的话关闭
     if (hs.network.interfaceName() == "Broadcom NetXtreme Gigabit Ethernet Controller") then
         local event = data["eventType"]
@@ -304,7 +304,7 @@ function screensChangedCallback()
     end
 
     lastNumberOfScreens = newNumberOfScreens
-    
+
     if newNumberOfScreens ~= 1 then
         spoon.MultiTranslate.result_show_style.textSize = 16
     elseif hs.screen.primaryScreen():currentMode()['scale'] == 1.0 then
@@ -313,7 +313,6 @@ function screensChangedCallback()
 end
 
 function setDisplayLayout(newNumberOfScreens)
-    
     hs.layout.apply(build_layout(newNumberOfScreens))
     hs.notify.new({
         title='Hammerspoon',

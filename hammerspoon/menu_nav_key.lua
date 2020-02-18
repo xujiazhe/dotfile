@@ -4,6 +4,8 @@ ax = require("hs._asm.axuielement")
 --b=require("browseObject")
 --axh=require("axh")
 --b.browse(ele, 1, 1)
+-- https://github.com/asmagill/hs._asm.axuielement
+-- 需要安装 axuielement
 
 dofile("./menu_nav_key2.lua")
 
