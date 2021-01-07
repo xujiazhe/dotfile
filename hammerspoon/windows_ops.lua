@@ -1,3 +1,4 @@
+local log = hs.logger.new('windows_ops.lua', 'debug')
 hs.window.animationDuration = 0
 
 -- todo winLno[cWinId] = gi(1).currentline   table.update return true  更新语法
@@ -21,7 +22,7 @@ function hs.window.moveScreen(win, step)
     local numberOfScreens = #orderedScreens
     local currentScreenNo = hs.fnutils.indexOf(orderedScreens, currentScreen)
     local targetCyclicScreenNo = (currentScreenNo + -1 + step + numberOfScreens) % numberOfScreens + 1
-
+    log.f("targetCyclicScreenNo = %d", targetCyclicScreenNo)
     if orderedScreens[targetCyclicScreenNo] then
         win:moveToScreen(orderedScreens[targetCyclicScreenNo])
     end
@@ -86,7 +87,7 @@ local function WinOpsCatcher(event)
     local ckey         = event:getCharacters(true)
     if winOpsMap[ckey] == nil then return false end
     local winops      = winOpsMap[ckey]
-    local win         = hs.window.focusedWindow()
+    win         = hs.window.focusedWindow()
     local winFrame    = win:frame()
     local screen      = win:screen()
     local screenFrame = screen:frame()
@@ -130,27 +131,28 @@ local function WinOpsCatcher(event)
             winFrame.x    = screenFrame.x;
         elseif winFrame.w == (screenFrame.w / 2) then
             winLno[winId] = gi(1).currentline
-            return win:moveScreen(-1), {}
+            return hs.window.moveScreen(win,-1), {}
         else
             local lno = gi(1).currentline
             if winLno[winId] == lno then
-                return win:moveScreen(-1), {}
+                return hs.window.moveScreen(win,-1), {}
             else winLno[winId] = lno
             end
             winFrame.w = screenFrame.w / 2;
         end
         win:setFrame(winFrame);
     elseif winops == 'right' then
+        log.f("win = %s", i(win.moveScreen))
         if (winFrame.x + winFrame.w) < (screenFrame.x + screenFrame.w) then
             local lno = gi(1).currentline
             if winLno[winId] == lno then
-                return win:moveScreen(1), {}
+                return hs.window.moveScreen(win,1), {}
             else winLno[winId] = lno
             end
             winFrame.w = winFrame.w + (screenFrame.x + screenFrame.w) - (winFrame.x + winFrame.w);
         elseif winFrame.x == screenFrame.x + (screenFrame.w / 2) then
             winLno[winId] = gi(1).currentline
-            return win:moveScreen(1), {}
+            return hs.window.moveScreen(win,1), {}
         else
             winLno[winId] = gi(1).currentline
             winFrame.x    = screenFrame.x + (screenFrame.w / 2);
@@ -158,14 +160,28 @@ local function WinOpsCatcher(event)
         end
         win:setFrame(winFrame);
     elseif winops == 'xdual' then
+		winLno[winId]    = gi(1).currentline
         --窗口展翅, 跨双屏
-        winLno[winId]    = gi(1).currentline
-        local screeng    = screen:fullFrame()
-        local menuHeight = screen:frame().y - screeng.y
-        winFrame.x       = 0
-        winFrame.y       = menuHeight
-        winFrame.w       = 1440 * 2
-        winFrame.h       = 2560 - menuHeight
+		--当前屏幕找到挨着的两个 LEN Cinema 放大
+		local screenName = 'LEN Cinema'
+		if screen:name() ~= screenName then return true end
+		local tscreen, x, w, h, y
+		s = screen
+		if screen:toEast() and screen:toEast():name() == screenName then
+			tscreen = screen:toEast()
+			x = screen:frame().x
+		end
+		if screen:toWest() and screen:toWest():name() == screenName then
+			tscreen = screen:toWest()
+			x = tscreen:frame().x
+		end
+		y = math.max(tscreen:frame().y, screen:frame().y)
+		w = tscreen:frame().w + screen:frame().w
+		h = math.min(tscreen:frame().h, screen:frame().h)
+        winFrame.x       = x
+        winFrame.y       = y
+        winFrame.w       = w
+        winFrame.h       = h
         win:setFrame(winFrame);
     elseif winops == 'cside' then
         if showCalendarBeside then
@@ -213,3 +229,9 @@ local windowsOpsTapper = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, Wi
 windowsOpsTapper:start()
 
 return windowsOpsTapper;
+
+--w=hs.application'PDF':mainWindow()
+--f=w:frame()
+--f.w=2256
+--f.h=1504
+--w:setFrame(f)

@@ -11,7 +11,7 @@
 
 function string.ends(String,End) return End=='' or string.sub(String,-string.len(End))==End end
 
--- require("config")
+require("_config") --TODO
 require('app_name_map')
 require("app_window_switch")
 require('windows_ops')
@@ -64,13 +64,13 @@ Install:andUse("MultiTranslate",
                 popup_style = wm.utility | wm.HUD | wm.titled | wm.closable | wm.resizable,
             },
             hotkeys = {
-				translate_to_zh = { hyper, "a" },
+				translate_to_zh = { hyper, "g" },
                 sogou_text = { hyper, "s" },
 				baidu = { hyper, "d" },
                 youdao = { hyper, "f" },
 				sogou_ocr = { hyper, "r" },
 
-				ggtoggle = {shift_hyper, "a"},
+				ggtoggle = {shift_hyper, "g"},
 				bdtoggle = {shift_hyper, "d"},
                 ydtoggle = {shift_hyper, "f"},
                 chuan = { hyper, "x" },
@@ -86,10 +86,27 @@ Install:andUse("MultiTranslate",
 
 
 -- Speech Syntheziser  todo 中英分开后分别朗读
---local en_speech = hs.speech.new("samantha.premium"):rate(220)
-local en_speech = hs.speech.new("tom.premium"):rate(220)
-local zn_speech = hs.speech.new("mei-jia.premium"):rate(300)
+local en_speech = hs.speech.new("samantha.premium"):rate(220)
+-- local en_speech = hs.speech.new("tom.premium"):rate(220)
+zn_speech = hs.speech.new("mei-jia.premium"):rate(240)
+zn_speech:setCallback(function(b, s, r)
+    if s == 'didFinish' and r and file_mode then
+        command = '/usr/local/bin/ffmpeg -i ' .. tname .. '  -ab 320000 -ar 22050 ' .. audio_path .. no .. '.mp3'
+        output, status, t, rc = hs.execute(command)
+        alert(no .. ".mp3 ->  " .. rc)
+        hs.execute( 'open ' .. tname)
+        no = no + 1
+    end
+end)
 local utf_8 = utf8.codes("utf8")
+file_mode = false
+audio_path = '~/Desktop/共产党/素材/audio/'
+output, status, t, rc = hs.execute('cd ' .. audio_path .. '; ls -r1v  *.mp3 | head -1 | cut  -d . -f 1')
+if string.len(output) > 0 then     no = tonumber(output)+1
+else    no = 1 end
+hs.hotkey.bind(shift_hyper, "e", function()
+    file_mode = not file_mode
+end)
 hs.hotkey.bind(hyper, "e", function ()
     if zn_speech:speaking() then zn_speech:stop("sentence") end
     if en_speech:speaking() then en_speech:stop("sentence") end
@@ -97,7 +114,12 @@ hs.hotkey.bind(hyper, "e", function ()
     if not hs.speech.isAnyApplicationSpeaking() then
         local text = current_selection()
         if utf_8(text, 1)  == 4 or utf8.len(text) <string.len(text)/2 then
-            zn_speech:speak(text)
+            if file_mode then
+                tname = audio_path .. no .. '.aiff'
+                b=zn_speech:speakToFile(text, tname)
+            else
+                zn_speech:speak(text)    
+            end
         else
             en_speech:speak(text)
         end
@@ -154,7 +176,9 @@ hs.timer.doAfter(1 * 30 * 60, timeReminder)
 --hs.eventtap.keyStroke({"fn"}, "z")  -- 默认启动时间轴模式
 
 --Install:andUse("TimeFlow")
-dofile("./menu_nav_key.lua")
+--dofile("./menu_nav_key.lua")
+
+--require('obs_key')
 
 return hs
 

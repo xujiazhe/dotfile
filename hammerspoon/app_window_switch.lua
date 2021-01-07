@@ -27,7 +27,7 @@ fn_app_key = {
     ['3'] = 'Calendar',
     ['4'] = "Be Focused",
 
-    [' '] = "Gitkraken",
+    -- [' '] = "Gitkraken",
     -- [' '] = "SourceTree",
     -- ['t'] = "Sequel Pro",
     ['t'] = "PSequel",
@@ -42,29 +42,30 @@ fn_app_key = {
 alt_app_key = {
     ['1']  = 'com.googlecode.iterm2',
     ['!']  = 'com.apple.Terminal',
-    ['2']  = 'com.jetbrains.intellij',
-    ['@']  = 'com.sublimetext.3',
+    ['2']  = 'com.sublimetext.3',
+    ['@']  = 'com.obsproject.obs-studio',
     ['3']  = 'com.google.Chrome',
-    ['#']  = 'com.brave.Browser',
+    ['#']  = "com.maxthon.mac.Maxthon",
     --['#']  = "ru.yandex.desktop.yandex-browser",
-    ['4']  = 'com.jetbrains.pycharm',
-    ['$']  = 'WebStorm',
+    ['4']  = 'com.colliderli.iina', -- com.jetbrains.pycharm
+    ['$']  = 'com.jetbrains.intellij', -- WebStorm',
 
 
     ['r']  = 'com.readdle.PDFExpert-Mac',
     ['R']  = 'com.apple.Preview',
     --['g'] = 'google chrome canary',
 
-    g      = 'com.electron.boostnote',
-    f     = "com.apple.Notes",
-    F      = 'com.apple.Stickies',
+    g      = 'com.blackmagic-design.DaVinciResolve', --Typora', --com.electron.boostnote',
+    
+    f      = "com.apple.Notes", --'com.apple.Stickies',
+    -- F     = 'com.kingsoft.wpsoffice.mac',≤
+    F     = '文本编辑',
     --c = 'HandShaker',
 
     h      = 'com.xk72.Charles',
     v      = 'org.virtualbox.app.VirtualBox',
     V      = 'org.virtualbox.app.VirtualBoxVM',
     o      = 'OpenSCAD',
-
     e      = 'com.apple.finder',
     E      = 'Microsoft Excel',
     x      = "com.apple.iChat",
@@ -73,7 +74,7 @@ alt_app_key = {
     -- w      = 'Microsoft Word',
     w      = 'org.libreoffice.script',
     W      = 'com.taobao.Aliwangwang',
-    m      = 'com.apple.mail',
+    m      = 'com.apple.iMovieApp', --'com.apple.mail',
     M      = 'Airmail 3',
     n      = 'com.netease.163music',
     N      = 'com.apple.Music',
@@ -83,7 +84,7 @@ alt_app_key = {
     [']']  = 'com.apple.TV',
     [';']  = 'com.apple.Photos',
     ['}']  = 'VLC',
-    ['\''] = 'com.colliderli.iina',
+    ['\''] = 'com.sandstudio.airdroid',
     ['.']  = 'com.apple.SystemProfiler',
     [',']  = 'com.apple.systempreferences',
     --k      = 'Motrix',
@@ -248,21 +249,27 @@ kjAppTab = {
     ["com.apple.finder"]       = true,
 
     ["com.apple.Terminal"]     = true,
-    ["com.sublimetext.3"]      = true,
     ["com.brave.Browser"]      = true,
     ["com.apple.Safari"]       = true,
+    ["com.maxthon.mac.Maxthon"]= true,
     ["com.google.Chrome"]      = true,
+    ["com.kingsoft.wpsoffice.mac"] = true,
+    --["com.jetbrains.intellij"] = true,
+    ["com.sublimetext.3"]      = {
+        {"Goto", "Switch File", "Next File"},
+        {"Goto", "Switch File", "Previous File"}
+    },
     ["com.googlecode.iterm2"]  = {
             {"Window", "Select Next Tab"},
             {"Window", "Select Previous Tab"}
     },
     ['com.readdle.PDFExpert-Mac'] = {
-        { "窗口", "转到上一标签页" },
-        { "窗口", "转到下一标签" }
+        { "窗口", "转到下一标签" },
+        { "窗口", "转到上一标签页" }
     },
 	['com.apple.Preview'] = {
-		{ "窗口", "显示上一个标签页" },
-        { "窗口", "显示下一个标签页" }
+		{ "窗口", "显示下一个标签页" },
+        { "窗口", "显示上一个标签页" }
 	}
     --['com.jetbrains.intellij'] = {
     --        {"Window","Editor Tabs", "Select Next Tab"},

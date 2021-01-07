@@ -1,4 +1,4 @@
-tap 'caskroom/cask'
+tap 'homebrew/cask'
 
 cask 'karabiner-elements'
 cask 'hammerspoon'
@@ -7,6 +7,7 @@ cask 'switchresx'
 
 cask 'google-chrome'
 cask 'sublime-text'
+cask 'intellij-idea'
 cask 'iterm2'
 
 cask 'appcleaner'
@@ -15,28 +16,25 @@ cask 'sogouinput'
 cask 'pdf-expert'
 cask 'iina'
 
-cask 'xquartz'
-cask 'wine-stable'
-
-brew 'wine'
-
-
-cask 'intellij-idea'
-cask 'boostnote'
-cask 'discord'
-
-
-# brew 'office'
 cask 'libreoffice'
-cask 'Gitkraken'
-
-
 cask 'openscad'
-cask 'virtualbox'
+
+cask 'Gitkraken'
 cask 'fork'
 
 
 cask 'vlc'
+cask 'virtualbox'
+
+# cask 'boostnote'
+# brew 'office'
+
+#cask 'xquartz'
+#cask 'wine-stable'
+#brew 'wine'
+#cask 'discord'
+
+
 
 # brew  coreutils
 # brew  moreutils
@@ -70,6 +68,7 @@ cask 'vlc'
 # brew  autojump
 # brew  mosh
 # brew  ruby
+
 # brew  zsh-autosuggestions
 # brew  zsh-syntax-highlighting
 # brew  zsh-autosuggestions

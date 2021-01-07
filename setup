@@ -1,9 +1,47 @@
 #!/bin/sh
 
 set -e
+# 文件  Brewfile  brew.sh    更换源 https://www.cnblogs.com/zunwen/p/12597654.html
+which -s brew || (echo "Homebrew is required: http://brew.sh/" && exit 1)
+brew bundle check || brew bundle
+# APPStore "Be Focused"
+
+触控板单点。
+程序坞。最小化。缩放效果。
+键盘 
+	键盘 F1 F2 
+	文本 拼写
+	快捷键
+		显示桌面
+		输入法 上一个下一个 ^.
+		屏幕快照  置换34
+		聚焦
+	输入法   简体双拼 微软
+	听写 可用了
+
+辅助功能 
+	鼠标与触控板  触控板选项 拖移
+	显示 减弱动态效果。提高对比度
+	语音 Tom mei-jia  Sam    稍后 精度提高
+
+
+
+# 安装了两个软件之后，不用启动，在 dotfiles 中
+#  rm -rf ~/.config/karabiner
+#  ls ~/.config || mkdir ~/.config
+#  ln -sfn $PWD/karabiner ~/.config/
+
+#  ln -sfn $PWD/hammerspoon ~/.hammerspoon
+
+#  校验 # 打开设置 参见 setup.sh
+# https://github.com/asmagill/hs._asm.axuielement
+#  bash setup.sh
+
+set -e
+
+#https://www.zhihu.com/question/31360766
 
 which -s brew || (echo "Homebrew is required: http://brew.sh/" && exit 1)
-
 brew bundle check || brew bundle
 
 # Prepare custom settings for Karabiner-Elements
@@ -18,8 +56,6 @@ if ! grep -sq "require('keyboard')" ~/.hammerspoon/init.lua; then
 fi
 ln -sfn $PWD/hammerspoon ~/.hammerspoon
 
-# Prepare custom settings for navigating between words in iTerm2
-grep -sq forward-word ~/.inputrc || cat $PWD/inputrc >> ~/.inputrc
 
 # Disable Dock icon for Hammerspoon
 defaults write org.hammerspoon.Hammerspoon MJShowDockIconKey -bool FALSE
@@ -39,26 +75,13 @@ osascript -e 'tell application "System Events" to make login item at end with pr
 echo "Done! Remember to enable Accessibility for Hammerspoon."
 
 
+# Brew brew
+# brew install autossh wget openssh
+# brew install python3 pip3 node npm
+# npm install @vitalets/google-translate-api
+# /usr/local/opt/python@3.9/libexec/bin/pip install requests
+# X  pip3 install requests
 
-#  触控板单点。
-#  键盘  快捷键 屏幕快照  置换34
-#  缩放效果
-#  辅助功能 鼠标与触控板  触控板选项 拖移
-#  辅助功能 显示 减弱动态效果。提高对比度
-#  辅助中的语音 Tom mei-jia. Sam
-
-
-#  rm -rf ~/.config/karabiner
-#  ln -sfn $PWD/karabiner ~/.config/
-
-#  ln -sfn $PWD/hammerspoon ~/.hammerspoon
-
-
-#  Brew brew
-#
-#  安装python3 安装requests库
-#  安装node 和 库   npm install  @vitalets/google-translate-api
-#
 #  Bash setup.sh
 #
 #  man中文  https://xujiazhe.github.io/work/2017/11/01/macos-doc-chinese.html
@@ -74,6 +97,9 @@ echo "Done! Remember to enable Accessibility for Hammerspoon."
 # https://github.com/kuoruan/shell-scripts
 # https://ssr.tools/588  一装就挂
 
+
+# Prepare custom settings for navigating between words in iTerm2
+grep -sq forward-word ~/.inputrc || cat $PWD/inputrc >> ~/.inputrc
 
 
 #ID   https://icpc.baylor.edu/ICPCID/TJIWVK522BOO

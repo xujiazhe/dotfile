@@ -1,11 +1,28 @@
 #!/bin/bash
 #!/usr/bin/env bash
-
+# https://www.harding.motd.ca/autossh/
 set -e
+# set -x
+PROXY_PORT=18863
+PROXY_HOST=127.0.0.1
 
-if test -n "$2"; then
+# ssh-keygen -t rsa -b 4096
+SOCKS_PROC_IDENTITY="~/.ssh/id_rsa.s"
+
+# A host where ssh can login without interaction, with a key-based authentication.
+SOCKS_PROC_USER="root"
+SSH_SERVICES=(
+  207.148.116.210  1378
+  139.180.217.0 8863
+  104.128.88.208 13378
+)
+
+# 选定使用的接口
+if false ;then 
+# if test -n "$2"; then
   #PROXY_INTERFACES=("Broadcom NetXtreme Gigabit Ethernet Controller" "Wi-Fi" "iPhone USB")
   IFS=$'\n'
+  networksetup -listallnetworkservices
   PROXY_INTERFACES=($(networksetup -listallnetworkservices | sed -n '2,$p'))
   if [[ ${#PROXY_INTERFACES[@]} -lt $2 ]]; then
     echo -e "\\033[1;31m\tno such interface\\033[0m" >&2
@@ -17,68 +34,70 @@ if test -n "$2"; then
 else
   #PROXY_INTERFACE=$(hs -c 'hs.network.interfaceName()') #找到当前活跃的接口
   IF=$(route -n get 0.0.0.0 2>/dev/null | awk '/interface: / {print $2}')
-  if test -z $IF; then  exit 10; fi
+  if test -z $IF; then exit 10; fi
   PROXY_INTERFACE=$(networksetup -listallhardwareports | sed -n "/^Device: $IF/{x;p;d;}; x" | sed -n -e 's/^Hardware Port: //p')
+  LOCAL_IP=$(ipconfig getifaddr $IF)
 fi
-
-# A host where ssh can login without interaction, with a key-based
-# authentication.
-SOCKS_PROC_USER="root"
-SSH_SERVICES=(
-  139.180.217.0 1378
-  139.180.209.248 22
-  104.128.88.208 13378
-)
 SSH_CHOOSE=$((${3-0} * 2))
 SOCKS_PROC_HOST=${SSH_SERVICES[$SSH_CHOOSE]}
 SOCKS_PROC_PORT=${SSH_SERVICES[$SSH_CHOOSE + 1]}
 
-PROXY_HOST=127.0.0.1
-PROXY_PORT=1080
-
-#ssh-keygen -t rsa -b 4096
-SOCKS_PROC_IDENTITY="~/.ssh/id_rsa.s"
-
 SOCKS_PROC_LOG=/tmp/ssh-socks-proxy-log.txt
 SOCKS_PROC_PIDFILE=/tmp/ssh-socks-proxy-pid.txt
 
+bypassips='localhost 127.0.0.1/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254/16 192.168.*.* ::1 *.lan *.baidu.com *.sogou.com *.youdao.com *.taobao.com *.weibo.com *.weixin.com *.qq.com *.sohu.com *.163.com bilibili.com'
+
 DIR="$(cd "$(dirname "$0")" && pwd)"
-PROXY_PAC_FILE="$DIR/gfwlist.pac"
 PROXY_PAC_FILE="https://raw.githubusercontent.com/petronny/gfwlist2pac/master/gfwlist.pac"
-
-SOCKS_PROC_CMD="autossh -M 0 \
-      -gCfN $SOCKS_PROC_USER@$SOCKS_PROC_HOST -p $SOCKS_PROC_PORT -i $SOCKS_PROC_IDENTITY -D $PROXY_PORT \
-      -o PubkeyAuthentication=yes -o StrictHostKeyChecking=false -o PasswordAuthentication=no \
-      -o ServerAliveInterval=30 -o ServerAliveCountMax=2 -o  ExitOnForwardFailure=yes"
-# ssh bu -gCfND 1080
+# C   -c aes128-ctr
+SOCKS_PROC_CMD="autossh -M 0  -c aes128-ctr \
+      -gfN $SOCKS_PROC_USER@$SOCKS_PROC_HOST -p $SOCKS_PROC_PORT -i $SOCKS_PROC_IDENTITY -D $PROXY_PORT \
+      -o PasswordAuthentication=no -o ExitOnForwardFailure=yes -o PubkeyAuthentication=yes -o StrictHostKeyChecking=false \
+      -o ServerAliveInterval=20 -o ServerAliveCountMax=1 "
+# ssh bu -gCfND 1080   # -o PubkeyAuthentication=yes -o StrictHostKeyChecking=false
 #SOCKS_PROC_CMD="ssh -i $SOCKS_PROC_IDENTITY  -D $PROXY_HOST:$PROXY_PORT $SOCKS_PROC_USER@$SOCKS_PROC_HOST -p $SOCKS_PROC_PORT"
-
-center() {
+center_text() {
   termwidth="$(tput cols)"
   padding="$(printf '%0.1s' -{1..500})"
-  printf '%*.*s \e[1;33m%s\e[m %*.*s\n' 0 "$(((termwidth-2-${#1})/2))" "$padding" "$1" 0 "$(((termwidth-1-${#1})/2))" "$padding"
+  printf '%*.*s \e[1;33m%s\e[m %*.*s\n' 0 "$(((termwidth - 2 - ${#1}) / 2))" "$padding" "$1" 0 "$(((termwidth - 1 - ${#1}) / 2))" "$padding"
 }
-center "$PROXY_INTERFACE";
+center_text "$PROXY_INTERFACE"
+
+if [[ $# == 2 ]]; then
+# $2 == "mn" || $1 == "mt"]]; then 
+  PROXY_HOST=$2
+  PROXY_PORT=10808
+  cd $DIR/ && python -m SimpleHTTPServer 80 1>&2 2>/dev/null &
+  PROXY_PAC_FILE2="http://${LOCAL_IP}/gfw.pac"
+  networksetup -setautoproxyurl "$PROXY_INTERFACE" $PROXY_PAC_FILE2
+  exit 0
+fi
 
 if [[ $1 == "on" ]]; then
-  nohup $SOCKS_PROC_CMD >"$SOCKS_PROC_LOG" 2>&1 # &
-  echo $(pgrep -n autossh) >"$SOCKS_PROC_PIDFILE"
+  if [[ $# == 1 ]]; then
+    nohup $SOCKS_PROC_CMD >"$SOCKS_PROC_LOG" 2>&1 # &
+    echo $(pgrep -n autossh) >"$SOCKS_PROC_PIDFILE"
+  elif [[ $# == 3 ]];then
+    PROXY_HOST=$2
+    PROXY_PORT=$3
+  fi
   #echo $(lsof -i:$PROXY_PORT -R | awk '/ssh / && /\ \(LISTEN\)/{print $3}' | uniq) >"$SOCKS_PROC_PIDFILE"
   networksetup -setsocksfirewallproxy "$PROXY_INTERFACE" $PROXY_HOST $PROXY_PORT
   networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" on
 
-  #networksetup -setproxybypassdomains "$PROXY_INTERFACE" localhost 127.0.0.1/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254/16 192.168.*.* ::1 *.lan  *.baidu.com *.sogou.com *.youdao.com *.weibo.com *.weixin.com *.qq.com *.sohu.com *.163.com
-  bypassips='localhost 127.0.0.1/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254/16 192.168.*.* ::1 *.lan *.baidu.com *.sogou.com *.youdao.com *.taobao.com *.weibo.com *.weixin.com *.qq.com *.sohu.com *.163.com'
-  test -e /tmp/chnroutes.txt || curl https://raw.githubusercontent.com/ym/chnroutes2/master/chnroutes.txt -o /tmp/chnroutes.txt
-  domains=$(sed '/^# /d' /tmp/chnroutes.txt)
+  test -e $DIR/chnroutes.txt || curl https://raw.githubusercontent.com/ym/chnroutes2/master/chnroutes.txt -o $DIR/chnroutes.txt
+  domains=$(sed '/^# /d' $DIR/chnroutes.txt)
   networksetup -setproxybypassdomains "$PROXY_INTERFACE" $bypassips $domains
 
   cat "$SOCKS_PROC_PIDFILE"
   echo "SOCKS proxy enabled"
+  
+# elif [[ $1 == "m" ]]; then
 
 elif [[ $1 == "off" ]]; then
   networksetup -setautoproxystate "$PROXY_INTERFACE" off
   networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" off
+  networksetup -setproxybypassdomains "$PROXY_INTERFACE" ""
   kill -s SIGTERM $(cat "$SOCKS_PROC_PIDFILE")
   rm "$SOCKS_PROC_PIDFILE"
   echo "SOCKS proxy disabled"
@@ -91,43 +110,57 @@ elif [[ $1 == "status" ]]; then
   )
   format_res=$(echo $res | sed 's/ Enabled\: Yes/ \\033[31;32;5mEnabled: Yes\\033[0m/g' | sed 's/ Enabled\: No/ \\033[37;31;5mEnabled: No\\033[0m/g')
   echo -e $format_res
-  center
+  echo -e "mobile   http://${LOCAL_IP}/gfw.pac"  "   http://`hostname`/gfw.pac"
+  center_text
+
   if test -e $SOCKS_PROC_PIDFILE && (ps -p $(cat "$SOCKS_PROC_PIDFILE") || pgrep -x autossh) >/dev/null; then
     ps -p $(cat "$SOCKS_PROC_PIDFILE") #$(pgrep -n autossh)  #摸不清楚到底死了没有
-    ps -fg $(pgrep -x autossh)   # pstree -s autossh
+    ps -g $(pgrep -x autossh)          # -f  # pstree -s autossh
   else
     echo "没有活跃进程" $(cat "$SOCKS_PROC_PIDFILE")
   fi
+  lsof -i:${PROXY_PORT} -sTCP:LISTEN
   tail "$SOCKS_PROC_LOG"
   echo
 elif [[ $1 == "update" ]]; then
   kill -s SIGUSR1 $(cat "$SOCKS_PROC_PIDFILE")
-  networksetup -setsocksfirewallproxy "$PROXY_INTERFACE" $PROXY_HOST $PROXY_PORT
-  networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" on
+#elif [[ $1 == "p" ]]; then
+#    sed -i -e "/127.0.0.1:1080/c\var proxy = 'SOCKS5 ${LOCAL_IP}:${PROXY_PORT}';" $DIR/gfw.pac;
 elif [[ $1 == "t" ]]; then
-  if networksetup -getautoproxyurl "$PROXY_INTERFACE" | grep "Enabled: No" >/dev/null; then
-    networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" off
-    networksetup -setautoproxystate "$PROXY_INTERFACE" off
-    networksetup -setautoproxyurl "$PROXY_INTERFACE" $PROXY_PAC_FILE
-  else
+  if networksetup -getautoproxyurl "$PROXY_INTERFACE" | grep "Enabled: Yes" >/dev/null; then
     networksetup -setautoproxystate "$PROXY_INTERFACE" off
     networksetup -setsocksfirewallproxy "$PROXY_INTERFACE" $PROXY_HOST $PROXY_PORT
     networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" on
+    networksetup -setproxybypassdomains "$PROXY_INTERFACE" $bypassips $domains
+  else
+    [ -e $DIR/gfwlist.pac ] || {
+      curl ${PROXY_PAC_FILE} -o $DIR/gfwlist.pac
+      cp $DIR/gfwlist.pac $DIR/gfw.pac
+      sed -i -e "/127.0.0.1:1080/c\var proxy = 'SOCKS5 127.0.0.1:${PROXY_PORT}';" $DIR/gfwlist.pac
+      sed -i -e "/127.0.0.1:1080/c\var proxy = 'SOCKS5 ${LOCAL_IP}:${PROXY_PORT}';" $DIR/gfw.pac
+    }
+    lsof -i:80 -sTCP:LISTEN | awk 'NR > 1 {print $2}' | xargs kill -15
+    cd $DIR/ && python -m SimpleHTTPServer 80 1>&2 2>/dev/null &
+    PROXY_PAC_FILE2="http://${LOCAL_IP}/gfw.pac"
+    PROXY_PAC_FILE="http://127.0.0.1/gfwlist.pac"
+
+    networksetup -setsocksfirewallproxystate "$PROXY_INTERFACE" off
+    networksetup -setautoproxystate "$PROXY_INTERFACE" off
+    networksetup -setautoproxyurl "$PROXY_INTERFACE" $PROXY_PAC_FILE
   fi
-  proxy status $2
+  $DIR/proxy status $2
 elif [[ $1 == "terminal" ]]; then
   #https://gist.github.com/fearblackcat/850c6e027d5a03017c44daaa6a7ffc30
   if test -z $socks_proxy; then
-    printf "开启终端代理\n
-    export http_proxy=$PROXY_PAC_FILE
-    export https_proxy=$PROXY_PAC_FILE
-    export all_proxy=$PROXY_PAC_FILE
-
-    export http_proxy=socks5://$PROXY_HOST:$PROXY_PORT
-    export https_proxy=socks5://$PROXY_HOST:$PROXY_PORT
-    export all_proxy=socks5://$PROXY_HOST:$PROXY_PORT
-
-    export socks_proxy=socks5://$PROXY_HOST:$PROXY_PORT"
+    echo "开启终端代理"
+  printf "export http_proxy=$PROXY_PAC_FILE
+export https_proxy=$PROXY_PAC_FILE
+export all_proxy=$PROXY_PAC_FILE\n
+\texport http_proxy=socks5://$PROXY_HOST:$PROXY_PORT
+\texport https_proxy=socks5://$PROXY_HOST:$PROXY_PORT
+\texport all_proxy=socks5://$PROXY_HOST:$PROXY_PORT\n
+\texport socks_proxy=socks5://$PROXY_HOST:$PROXY_PORT\n" | pbcopy
+  pbpaste
   else
     printf "关闭终端代理\n unset http_proxy\n unset https_proxy\n unset all_proxy\n unset socks_proxy\n"
   fi
@@ -160,12 +193,12 @@ setproxy() {
 #如果不能用socks5
 #代理转换  https://blog.fazero.me/2015/08/31/%E5%88%A9%E7%94%A8proxychains%E5%9C%A8%E7%BB%88%E7%AB%AF%E4%BD%BF%E7%94%A8socks5%E4%BB%A3%E7%90%86/
 
-# curl --socks5-hostname localhost:1080 https://raw.githubusercontent.com/petronny/gfwlist2pac/master/gfwlist.pac -o ~/bin/my.pac
-# sed  -i 's/SOCKS5 127.0.0.1:1080/SOCKS5 192.168.1.102:1080/'  ~/bin/my.pac
+# curl --socks5-hostname localhost:1080 https://raw.githubusercontent.com/petronny/gfwlist2pac/master/gfwlist.pac -o $DIR/my.pac
+# sed  -i 's/SOCKS5 127.0.0.1:1080/SOCKS5 192.168.1.102:1080/'  $DIR/my.pac
 
 # sed -i -e "/127.0.0.1:1080/c\\
 # var proxy = 'SOCKS5 192.168.1.102:1080';\\
-# " ~/bin/my.pac;
+# " $DIR/my.pac;
 
 # polipo socksParentProxy=localhost:1080  proxyAddress='::0'
 # polipo -c ~/.poliporc
@@ -187,6 +220,12 @@ setproxy() {
 #--proxy-server="socks5://127.0.0.1:1337" \
 #--host-resolver-rules="MAP * 0.0.0.0 , EXCLUDE localhost"
 
+
+#  /etc/selinux/config   reboot
+#  https://forums.centos.org/viewtopic.php?t=72323
+#  localectl set-locale en_US.utf8
+
+# https://segmentfault.com/a/1190000018277467
 # vultr centos8 修改ssh默认端口
 change_ssh_port() {
   SSHPORT=$1
@@ -200,7 +239,7 @@ change_ssh_port() {
       echo -e "Restarting SSH in 5 seconds. Please wait.\n"
       sleep 5
       semanage port -a -t ssh_port_t -p tcp $SSHPORT
-      firewall-cmd --permanent --zone=public --add-port=1378/tcp
+      firewall-cmd --permanent --zone=public --add-port=$SSHPORT/tcp
       firewall-cmd --reload
       /bin/systemctl restart sshd.service
       echo ""
@@ -215,16 +254,22 @@ change_ssh_port() {
     echo -n "Please enter the port you would like SSH to run on > "
   fi
 }
-# change_ssh_port 3456
+# change_ssh_port 1378
 
-change_sshd_port2() {
-  semanage port -a -t ssh_port_t -p tcp 13378
-  firewall-cmd --permanent --zone=public --add-port=22/tcp
-  firewall-cmd --permanent --zone=public --add-port=13378/tcp
+add_port() {
+  SSHPORT=$1
+  #  semanage port -a -t ssh_port_t -p tcp $SSHPORT
+  firewall-cmd --permanent --zone=public --add-port=$SSHPORT/tcp
   firewall-cmd --reload
-  /bin/systemctl restart sshd.service
+  #  /bin/systemctl restart sshd.service
 }
-# https://segmentfault.com/a/1190000018277467
+
+# yum install -y iperf3.x86_64
+# add_port 12345
+# iperf3 -s -p 12345 -i 1
+# iperf3 -c 139.180.217.0 -p 12345 -i 1 -t 20 -w 100k
+# proxy update 失败
+
 # networksetup -listallhardwareports 查看当前所有端口Mac地址
 # sudo ifconfig en1 ether e4:ce:8f:32:51:82 修改
 # en1是WiFi标记 e4:ce:8f:32:51:82 是目标Mac地址
@@ -234,21 +279,80 @@ change_sshd_port2() {
 #color morning
 #nnoremap <F2> :exe getline(".")<CR>
 
-#color default
-#color blue
-#colorscheme desert
-#color evening
-#color koehler
-#color murphy
-#color peachpuff
-#color shine
-#color torte
-#color darkblue
-#color delek
-#color elflord
-#color industry
-#color morning
-#color pablo
-#color ron
-#color slate
-#color zellner
+
+
+exit 0
+
+iptables -t nat -N SOCKS
+
+#iptables -t nat -A SOCKS -d 0.0.0.0/8 -j RETURN
+iptables -t nat -A SOCKS -d 192.168.0.0/16 -j RETURN
+iptables -t nat -A SOCKS -d 10.0.0.0/8 -j RETURN
+iptables -t nat -A SOCKS -d 127.0.0.0/8 -j RETURN
+iptables -t nat -A SOCKS -d 169.254.0.0/16 -j RETURN
+iptables -t nat -A SOCKS -d 172.16.0.0/12 -j RETURN
+iptables -t nat -A SOCKS -d 224.0.0.0/4 -j RETURN
+iptables -t nat -A SOCKS -d 240.0.0.0/4 -j RETURN
+
+iptables -t nat -A SOCKS -p tcp -j REDIRECT --to-ports 10101
+
+iptables -t nat -A OUTPUT -p tcp --dport 443 -j SOCKS
+iptables -t nat -A OUTPUT -p tcp --dport 80 -j SOCKS
+
+iptables -t nat -A PREROUTING -p tcp --dport 443 -j SOCKS
+iptables -t nat -A PREROUTING -p tcp --dport 80 -j SOCKS
+
+
+
+
+
+# Create new chain
+iptables -t nat -N SHADOWSOCKS
+iptables -t mangle -N SHADOWSOCKS
+
+# Ignore your shadowsocks server's addresses
+# It's very IMPORTANT, just be careful.
+iptables -t nat -A SHADOWSOCKS -d 139.180.217.0 -j RETURN
+
+# Ignore LANs and any other addresses you'd like to bypass the proxy
+# See Wikipedia and RFC5735 for full list of reserved networks.
+# See ashi009/bestroutetb for a highly optimized CHN route list.
+iptables -t nat -A SHADOWSOCKS -d 0.0.0.0/8 -j RETURN
+iptables -t nat -A SHADOWSOCKS -d 10.0.0.0/8 -j RETURN
+iptables -t nat -A SHADOWSOCKS -d 127.0.0.0/8 -j RETURN
+iptables -t nat -A SHADOWSOCKS -d 169.254.0.0/16 -j RETURN
+iptables -t nat -A SHADOWSOCKS -d 172.16.0.0/12 -j RETURN
+iptables -t nat -A SHADOWSOCKS -d 192.168.0.0/16 -j RETURN
+iptables -t nat -A SHADOWSOCKS -d 224.0.0.0/4 -j RETURN
+iptables -t nat -A SHADOWSOCKS -d 240.0.0.0/4 -j RETURN
+
+# Anything else should be redirected to shadowsocks's local port
+iptables -t nat -A SHADOWSOCKS -p tcp -j REDIRECT --to-ports 10101
+
+# Add any UDP rules
+ip route add local default dev lo table 100
+ip rule add fwmark 1 lookup 100
+iptables -t mangle -A SHADOWSOCKS -p udp --dport 53 -j TPROXY --on-port 10101 --tproxy-mark 0x01/0x01
+
+# Apply the rules
+iptables -t nat -A PREROUTING -p tcp -j SHADOWSOCKS
+iptables -t mangle -A PREROUTING -j SHADOWSOCKS
+
+有些事情，我该告诉你们了。
+从《GCD宣言》教义上 来分析，马勒克斯 牛逼&独特 之处 不在于 对 资本主义的另类阐释，对 历史的评析总结，对 党文化 的 杂烩柔和。
+而是 马勒克斯政权 能把 一块地区 变成 奴隶区 和 外部依赖区， 但 大国 会 破产分裂。（且在世界 不公背景上来看 连奴隶 都不如）。
+这是一种毁灭式 诅咒性的 奴役， 思想上 把近代大部分成果 的 进取之路 都堵死了。
+马勒克斯 这种 西方思想家，GCD的 精神祖宗，给其目标社会 贴上了 共产/社会 主义 标签；马勒克斯 真他妈的是 文明蜂巢 毁灭者。
+政权性质上 来看 和 逆历史潮流的 恐怖组织 类似，政权都 忤逆 大部分 国际通行的道德观，合法性 较大程度 伤害性的 影响 政权与社区的 运作健康度。
+当我看到《九评GCD》，那种灭国般 深切的悲怆感，我想别人难以理解，目前 改革进程 业已破产。
+我们 如何看 物质财富来源与分配 和 我们的生存 方式，我们 决不能 让我们的子代 还在 这种 社区环境下 生存。
+我为我们 深深地感到不幸，我对你们 没什么 好隐瞒的。
+
+《GCD宣言》引言说 当GCD在欧洲时，法国,德国,意大利,俄罗斯 这是什么病毒啊。
+
+申明 这 无关立场。
+
+对于一个像中国 这样的大国，马 或 秦 可能 都没有 未来，这块社区 都弄不好，另外 自由主义者 尤其不喜欢 其中 任何一个。
+但 真正实现的社会主义效果的 如 英国，社会各 主要角色 应 都反对 马克思主义。
+相对于马列观，在现代社会，一个国家 应该用另一种 生物视角 来看待。
+

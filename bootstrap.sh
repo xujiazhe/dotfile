@@ -42,7 +42,7 @@ done;
 ln brew.sh ~
 ln vimrc ~/vimrc
 ln gitignore ~/.gitignore
-ln -sfn bin ~
+ln -sfn bin ~/
 
 #  path,bash_prompt,exports,aliases,functions,extra}; do
 #	[ -r "$file" ] && [ -f "$file" ] && source "$file";
